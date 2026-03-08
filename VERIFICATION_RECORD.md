@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:11 (Asia/Shanghai)
+更新时间：2026-03-09 06:13 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:11
+- timestamp: 2026-03-09 06:13
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -716,7 +716,7 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: 0aefcaeae65f7ad872ddc2ba74f01b94644f4323
+- workspace-root: fc7243697aec557726be1dd3c794120dc5f7d9cd
 
 结论：
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
@@ -800,9 +800,9 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
-- 已更新 VERIFICATION_RECORD.md 与 execution-state.json，同步本轮首屏提示基线校验结果
 - 已在根工作区提交 chore: validate archive first-screen notices（c6c8edc），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败
 - 本轮已为 scripts/root_archive_audit.py 新增 execution-state.json -> blocking.fallback / nextSteps[2] 与 VERIFICATION_RECORD.md 的阻塞续跑显式校验；首次执行发现 latestAudit、阻塞项 标记缺失且两处续跑文案不一致，修正后复跑 RESULT: PASS
+- 已在根工作区提交 chore: validate blocking snapshot sync（fc72436），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
