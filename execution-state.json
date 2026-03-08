@@ -1,6 +1,6 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T02:02:00+08:00",
+  "updatedAt": "2026-03-09T02:04:00+08:00",
   "currentStep": "已继续清理根工作区剩余旧单体源码/配置入口：本轮完成 src/main.tsx、stream-server/ffmpeg-websocket-server.ts、stream-server/webrtc-server.ts 与 nginx/nginx.conf 归档改写并验证，阻止继续误用根目录前端源码、旧流媒体 Deno 服务与历史 Nginx 部署配置；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归，如仍缺凭据则继续清理根工作区其余历史单体残留文件。",
   "completed": [
     "A1",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "3dc89ae4e94ad9f685cb32cc5e33e314c3d0ffc6"
+    "workspace-root": "96560e5cb01031ad80b3cfe074b05b3002b1a3b4"
   },
   "blocking": {
     "status": "partial",
@@ -106,7 +106,9 @@
       "本轮已将 stream-server/ffmpeg-websocket-server.ts 与 stream-server/webrtc-server.ts 改为归档错误守卫，清除根目录旧流媒体 Deno 原型入口与历史 RTSP 配置",
       "本轮已将 nginx/nginx.conf 改为根工作区历史归档说明，阻止继续误用旧单体 Nginx 部署配置",
       "已执行 head/cat + grep 校验上述 4 处归档标识与三端导航说明",
-      "已执行 deno run stream-server/ffmpeg-websocket-server.ts，确认仅抛出 Archived root workspace 错误并中止"
+      "已执行 deno run stream-server/ffmpeg-websocket-server.ts，确认仅抛出 Archived root workspace 错误并中止",
+      "已在根工作区提交 docs: archive remaining root source and nginx stubs（96560e5）",
+      "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
