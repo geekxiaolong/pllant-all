@@ -495,14 +495,17 @@ RECENT_COMMIT_REPOS = {
 }
 
 RECENT_COMMIT_REQUIRED_MARKERS = {
-    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'RESULT: PASS'),
+    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_RECENT_COMMITS_HEADING = '### 26. recentCommits 与仓库 HEAD 显式校验'
 VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
     'recentCommits',
     'git rev-parse HEAD',
+    'git log -3 --format=%H',
+    'HEAD~1',
+    'HEAD~2',
     'heart-plant',
     'heart-plant-admin',
     'heart-plant-api',
@@ -1272,6 +1275,12 @@ def recent_commit_consistency_gaps() -> list[str]:
                                     'VERIFICATION_RECORD workspace-root recent head window mismatch :: '
                                     f'recorded={recorded_window} expected={expected_window} recent={recent_heads}'
                                 )
+                            head1_marker = f'- workspace-root HEAD~1: {recent_heads[1]}'
+                            if head1_marker not in section_text:
+                                gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {head1_marker}')
+                            head2_marker = f'- workspace-root HEAD~2: {recent_heads[2]}'
+                            if head2_marker not in section_text:
+                                gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {head2_marker}')
             else:
                 expected_marker = f'- {repo_name}: {actual}'
                 if expected_marker not in section_text:
