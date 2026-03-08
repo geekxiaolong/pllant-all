@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T04:57:00+08:00",
-  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 archived 文档/脚本/配置/目录 README 的“首屏归档说明 + 主导航回指”显式基线校验（前 20 行必须同时命中 archive marker 与 navigation marker）；执行 python3 scripts/root_archive_audit.py 验证 first-screen archive notice gaps: 0，RESULT: PASS。",
+  "updatedAt": "2026-03-09T04:59:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 archived 文档/脚本/配置/目录 README 的“首屏归档说明 + 主导航回指”显式基线校验（前 20 行必须同时命中 archive marker 与 navigation marker）；执行 python3 scripts/root_archive_audit.py 验证 first-screen archive notice gaps: 0，RESULT: PASS；随后已提交根仓库 commit c6c8edc（chore: validate archive first-screen notices），再次尝试 git push origin HEAD 仍因根仓库未配置可用 origin 失败。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "a1c21b31300747657614bdf609f3abf2ce58716e"
+    "workspace-root": "c6c8edc69c237e6ef258e9a36aae3f828e63aa3e"
   },
   "blocking": {
     "status": "partial",
@@ -166,7 +166,8 @@
       "已在根工作区提交 chore: validate blocker sections in archive docs（a1c21b3），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
       "本轮已为 scripts/root_archive_audit.py 新增 archived 文档/脚本/配置/目录 README 的首屏归档说明 + 主导航回指显式基线校验，要求前 20 行同时命中 archive marker 与 navigation marker",
       "已执行 python3 scripts/root_archive_audit.py，确认 first-screen archive notice gaps: 0，RESULT: PASS",
-      "已更新 VERIFICATION_RECORD.md 与 execution-state.json，同步本轮首屏提示基线校验结果"
+      "已更新 VERIFICATION_RECORD.md 与 execution-state.json，同步本轮首屏提示基线校验结果",
+      "已在根工作区提交 chore: validate archive first-screen notices（c6c8edc），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充 archived 头部提示、主导航闭环、阻塞段落锚点、execution-state/verification 记录同步等显式基线校验），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
