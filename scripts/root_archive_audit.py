@@ -464,6 +464,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocking status consistency issues',
     'verification record consistency issues',
     'execution plan consistency issues',
+    'completed sequence consistency issues',
 )
 
 DOC_TIMESTAMP_REQUIREMENTS = {
@@ -610,6 +611,22 @@ EXECUTION_PLAN_REQUIRED_MARKERS = {
     'VERIFICATION_RECORD.md': ('EXECUTION_PLAN.md', 'completed', 'RESULT: PASS'),
 }
 
+VERIFICATION_RECORD_COMPLETED_SEQUENCE_HEADING = '### 34. completed 顺序 / 去重 / 总数显式校验'
+VERIFICATION_RECORD_COMPLETED_SEQUENCE_MARKERS = (
+    'execution-state.json',
+    'completed',
+    'count=30',
+    'no duplicates',
+    'canonical order',
+    'A1',
+    'D6',
+    'RESULT: PASS',
+)
+COMPLETED_SEQUENCE_REQUIRED_MARKERS = {
+    'currentStep': ('execution-state.json', 'completed', 'count=30', 'no duplicates', 'canonical order', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('execution-state.json', 'completed', 'count=30', 'no duplicates', 'canonical order', 'RESULT: PASS'),
+}
+
 
 def parse_execution_plan_tasks(text: str) -> dict[str, bool]:
     tasks: dict[str, bool] = {}
@@ -622,6 +639,10 @@ def parse_execution_plan_tasks(text: str) -> dict[str, bool]:
     return tasks
 
 
+def expected_task_ids() -> list[str]:
+    return [f'{prefix}{idx}' for prefix, end in [('A', 8), ('B', 8), ('C', 8), ('D', 6)] for idx in range(1, end + 1)]
+
+
 def execution_plan_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -629,7 +650,7 @@ def execution_plan_consistency_gaps() -> list[str]:
     plan_text = EXECUTION_PLAN.read_text(encoding='utf-8', errors='ignore')
     plan_tasks = parse_execution_plan_tasks(plan_text)
 
-    expected_tasks = [f'{prefix}{idx}' for prefix, end in [('A', 8), ('B', 8), ('C', 8), ('D', 6)] for idx in range(1, end + 1)]
+    expected_tasks = expected_task_ids()
     for task_id in expected_tasks:
         if task_id not in plan_tasks:
             gaps.append(f'EXECUTION_PLAN missing task checkbox :: {task_id}')
@@ -674,6 +695,64 @@ def execution_plan_consistency_gaps() -> list[str]:
         gaps.append(f'execution-state completed contains unexpected task id :: {task_id}')
 
     return gaps
+
+
+def completed_sequence_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    expected_tasks = expected_task_ids()
+    completed = state.get('completed')
+    if not isinstance(completed, list):
+        return ['execution-state completed missing or invalid for sequence check']
+
+    if len(completed) != len(expected_tasks):
+        gaps.append(
+            'execution-state completed count mismatch :: '
+            f'count={len(completed)} expected={len(expected_tasks)}'
+        )
+
+    duplicate_items = sorted({item for item in completed if completed.count(item) > 1})
+    for item in duplicate_items:
+        gaps.append(f'execution-state completed duplicate task id :: {item}')
+
+    non_string_items = [repr(item) for item in completed if not isinstance(item, str)]
+    for item in non_string_items:
+        gaps.append(f'execution-state completed contains non-string item :: {item}')
+
+    completed_strings = [item for item in completed if isinstance(item, str)]
+    if completed_strings != expected_tasks:
+        gaps.append(
+            'execution-state completed canonical order mismatch :: '
+            f'actual={completed_strings} expected={expected_tasks}'
+        )
+
+    current_step = state.get('currentStep', '')
+    for marker in COMPLETED_SEQUENCE_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing completed sequence marker :: {marker}')
+
+    for marker in COMPLETED_SEQUENCE_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing completed sequence marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_COMPLETED_SEQUENCE_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing completed sequence section :: '
+            f'{VERIFICATION_RECORD_COMPLETED_SEQUENCE_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_COMPLETED_SEQUENCE_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD completed sequence marker missing :: {marker}')
+        expected_line = '- canonical sequence: ' + ', '.join(expected_tasks)
+        if expected_line not in section_text:
+            gaps.append(f'VERIFICATION_RECORD completed sequence marker missing :: {expected_line}')
+
+    return gaps
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -1644,6 +1723,7 @@ def main() -> int:
     workspace_status_issues = workspace_status_consistency_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
     execution_plan_issues = execution_plan_consistency_gaps()
+    completed_sequence_issues = completed_sequence_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1677,6 +1757,7 @@ def main() -> int:
         'blocking status consistency issues': len(blocking_status_issues),
         'verification record consistency issues': 0,
         'execution plan consistency issues': len(execution_plan_issues),
+        'completed sequence consistency issues': len(completed_sequence_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -1749,6 +1830,9 @@ def main() -> int:
     if execution_plan_issues:
         print('\n[execution plan consistency issues]')
         print('\n'.join(execution_plan_issues))
+    if completed_sequence_issues:
+        print('\n[completed sequence consistency issues]')
+        print('\n'.join(completed_sequence_issues))
 
     failed = bool(
         missing_readmes
@@ -1772,6 +1856,7 @@ def main() -> int:
         or blocking_status_issues
         or verification_record_issues
         or execution_plan_issues
+        or completed_sequence_issues
     )
     if failed:
         print('\nRESULT: FAIL')

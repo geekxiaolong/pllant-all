@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:15 (Asia/Shanghai)
+更新时间：2026-03-09 07:21 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:15
+- timestamp: 2026-03-09 07:21
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -597,6 +597,7 @@
 - blocking status consistency issues: 0
 - verification record consistency issues: 0
 - execution plan consistency issues: 0
+- completed sequence consistency issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -720,10 +721,10 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: latest local HEAD 502b4eafca214420c7b14275085dcd219110d6e6 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 502b4eafca214420c7b14275085dcd219110d6e6, b1b8ba2755906fb77679a1d5c616f12c1958bb5f
-- workspace-root HEAD~1: 502b4eafca214420c7b14275085dcd219110d6e6
-- workspace-root HEAD~2: b1b8ba2755906fb77679a1d5c616f12c1958bb5f
+- workspace-root: latest local HEAD 2b3a8d7980a3cbe89e56bdd16217d1cce3776e81 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 2b3a8d7980a3cbe89e56bdd16217d1cce3776e81, 502b4eafca214420c7b14275085dcd219110d6e6
+- workspace-root HEAD~1: 2b3a8d7980a3cbe89e56bdd16217d1cce3776e81
+- workspace-root HEAD~2: 502b4eafca214420c7b14275085dcd219110d6e6
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -934,7 +935,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 502b4eafca214420c7b14275085dcd219110d6e6
+- workspace-root HEAD~1 anchor: 2b3a8d7980a3cbe89e56bdd16217d1cce3776e81
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -1038,3 +1039,45 @@
 结论：
 - 根工作区归档巡检现已覆盖“`EXECUTION_PLAN.md` 复选框状态是否仍与 `execution-state.json -> completed`、`VERIFICATION_RECORD.md` 显式同步”这一层约束
 - 后续若 cron 只更新状态源、不回写原始执行清单，脚本会直接 FAIL，进一步降低计划面与实际进度漂移风险
+
+### 34. completed 顺序 / 去重 / 总数显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `execution-state.json -> completed` 从“集合一致”进一步升级为“顺序 / 去重 / 总数”显式校验，避免后续状态源虽然仍包含 A1-D6，但悄悄出现乱序、重复或漏项。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会显式校验 `execution-state.json -> completed` 是否保持 canonical order：`A1-A8`、`B1-B8`、`C1-C8`、`D1-D6`
+- `completed` 必须满足 `count=30`、`no duplicates`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `execution-state.json`、`completed`、`count=30`、`no duplicates`、`canonical order`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，固化本轮 completed 顺序 / 去重 / 总数审计结果
+- 最近一轮归档审计摘要也已纳入 `completed sequence consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `completed sequence consistency issues: 7`
+   - 具体缺口：
+     - `execution-state.json -> currentStep` 缺少 `count=30` / `no duplicates` / `canonical order`
+     - `VERIFICATION_RECORD.md` 正文缺少 `count=30` / `no duplicates` / `canonical order`
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 34. completed 顺序 / 去重 / 总数显式校验`
+   - 同时因正在修改 `scripts/root_archive_audit.py`，首次回归阶段根工作区 tracked files 仍为 dirty，额外命中 `workspace status consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `completed_sequence_consistency_gaps()` 与 `completed sequence consistency issues` 汇总项
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节并固化本轮 `completed` 顺序 / 去重 / 总数审计结果
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `completed sequence consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 completed 序列快照：
+- execution-state.json: completed canonical order preserved
+- completed count=30
+- completed duplicates: no duplicates
+- canonical sequence: A1, A2, A3, A4, A5, A6, A7, A8, B1, B2, B3, B4, B5, B6, B7, B8, C1, C2, C3, C4, C5, C6, C7, C8, D1, D2, D3, D4, D5, D6
+- EXECUTION_PLAN.md: checklist coverage remains synchronized with the same completed sequence
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“`execution-state.json -> completed` 是否仍保持 canonical order、count=30、no duplicates，并与 `VERIFICATION_RECORD.md` / `currentStep` 显式同步”这一层约束
+- 后续若 cron 只保证任务集合大致正确，却把 `completed` 写成乱序、重复或缺项列表，脚本会直接 FAIL，进一步降低完成态状态源漂移风险
