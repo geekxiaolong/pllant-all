@@ -465,7 +465,9 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'verification record consistency issues',
     'execution plan consistency issues',
     'completed sequence consistency issues',
+    'fallback route consistency issues',
 )
+
 
 DOC_TIMESTAMP_REQUIREMENTS = {
     'README.md': 'execution-state.json',
@@ -627,6 +629,22 @@ COMPLETED_SEQUENCE_REQUIRED_MARKERS = {
     'VERIFICATION_RECORD.md': ('execution-state.json', 'completed', 'count=30', 'no duplicates', 'canonical order', 'RESULT: PASS'),
 }
 
+VERIFICATION_RECORD_FALLBACK_ROUTE_HEADING = '### 35. currentStep / fallback route 显式校验'
+VERIFICATION_RECORD_FALLBACK_ROUTE_MARKERS = (
+    'currentStep',
+    'blocking.fallback',
+    'nextSteps[2]',
+    'fallback route',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'latestAudit',
+    'RESULT: PASS',
+)
+FALLBACK_ROUTE_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.fallback', 'nextSteps[2]', 'fallback route', 'execution-state.json', 'VERIFICATION_RECORD.md', 'latestAudit', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.fallback', 'nextSteps[2]', 'fallback route', 'execution-state.json', 'VERIFICATION_RECORD.md', 'latestAudit', 'RESULT: PASS'),
+}
+
 
 def parse_execution_plan_tasks(text: str) -> dict[str, bool]:
     tasks: dict[str, bool] = {}
@@ -756,6 +774,56 @@ def completed_sequence_consistency_gaps() -> list[str]:
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
+
+
+def fallback_route_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    blocking = state.get('blocking', {})
+    fallback = blocking.get('fallback', '')
+    next_steps = state.get('nextSteps')
+    current_step = state.get('currentStep', '')
+
+    if not isinstance(fallback, str) or not fallback.strip():
+        gaps.append('execution-state blocking.fallback missing or empty for fallback route check')
+        fallback = ''
+
+    fallback_step = ''
+    if not isinstance(next_steps, list) or len(next_steps) < 3:
+        gaps.append('execution-state nextSteps[2] missing for fallback route check')
+    else:
+        fallback_step = next_steps[2]
+        if not isinstance(fallback_step, str) or not fallback_step.strip():
+            gaps.append('execution-state nextSteps[2] empty for fallback route check')
+            fallback_step = ''
+
+    if fallback and fallback_step and fallback != fallback_step:
+        gaps.append('execution-state blocking.fallback and nextSteps[2] mismatch for fallback route check')
+
+    for marker in FALLBACK_ROUTE_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing fallback route marker :: {marker}')
+
+    for marker in FALLBACK_ROUTE_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing fallback route marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_FALLBACK_ROUTE_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing fallback route section :: '
+            f'{VERIFICATION_RECORD_FALLBACK_ROUTE_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_FALLBACK_ROUTE_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD fallback route marker missing :: {marker}')
+        if fallback and f'- blocking.fallback / nextSteps[2] snapshot: {fallback}' not in section_text:
+            gaps.append('VERIFICATION_RECORD fallback route section missing exact fallback snapshot line')
+
+    return gaps
 
 
 def find_missing_readmes() -> list[str]:
@@ -1724,6 +1792,7 @@ def main() -> int:
     blocking_status_issues = blocking_status_consistency_gaps()
     execution_plan_issues = execution_plan_consistency_gaps()
     completed_sequence_issues = completed_sequence_consistency_gaps()
+    fallback_route_issues = fallback_route_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1758,6 +1827,7 @@ def main() -> int:
         'verification record consistency issues': 0,
         'execution plan consistency issues': len(execution_plan_issues),
         'completed sequence consistency issues': len(completed_sequence_issues),
+        'fallback route consistency issues': len(fallback_route_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -1833,6 +1903,9 @@ def main() -> int:
     if completed_sequence_issues:
         print('\n[completed sequence consistency issues]')
         print('\n'.join(completed_sequence_issues))
+    if fallback_route_issues:
+        print('\n[fallback route consistency issues]')
+        print('\n'.join(fallback_route_issues))
 
     failed = bool(
         missing_readmes
@@ -1857,6 +1930,7 @@ def main() -> int:
         or verification_record_issues
         or execution_plan_issues
         or completed_sequence_issues
+        or fallback_route_issues
     )
     if failed:
         print('\nRESULT: FAIL')

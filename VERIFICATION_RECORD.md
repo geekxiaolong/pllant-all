@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:21 (Asia/Shanghai)
+更新时间：2026-03-09 07:30 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -598,6 +598,7 @@
 - verification record consistency issues: 0
 - execution plan consistency issues: 0
 - completed sequence consistency issues: 0
+- fallback route consistency issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -1081,3 +1082,44 @@
 结论：
 - 根工作区归档巡检现已覆盖“`execution-state.json -> completed` 是否仍保持 canonical order、count=30、no duplicates，并与 `VERIFICATION_RECORD.md` / `currentStep` 显式同步”这一层约束
 - 后续若 cron 只保证任务集合大致正确，却把 `completed` 写成乱序、重复或缺项列表，脚本会直接 FAIL，进一步降低完成态状态源漂移风险
+
+### 35. currentStep / fallback route 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线推进，补强 `scripts/root_archive_audit.py`，把“当前实际正在按哪个 fallback 路线续跑”也纳入显式校验，避免 `blocking.fallback`、`nextSteps[2]`、`currentStep` 与 `VERIFICATION_RECORD.md` 再次各写各的。
+
+新增校验项：
+- `execution-state.json -> blocking.fallback` 与 `execution-state.json -> nextSteps[2]` 必须继续保持完全一致
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `blocking.fallback`、`nextSteps[2]`、`fallback route`、`execution-state.json`、`VERIFICATION_RECORD.md`、`latestAudit`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并显式落盘当前 fallback route 快照
+- 最近一轮归档审计摘要也已纳入 `fallback route consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `fallback route consistency issues: 4`
+   - 具体缺口：
+     - `execution-state.json -> currentStep` 缺少 `blocking.fallback`
+     - `execution-state.json -> currentStep` 缺少 `fallback route`
+     - `VERIFICATION_RECORD.md` 正文缺少 `fallback route` 标记
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 35. currentStep / fallback route 显式校验`
+   - 同时因正在修改 `scripts/root_archive_audit.py`，首次回归阶段根工作区 tracked files 仍为 dirty，额外命中 `workspace status consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `fallback_route_consistency_gaps()` 与 `fallback route consistency issues` 汇总项
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节，并显式落盘 `blocking.fallback` / `nextSteps[2]` / `fallback route` 快照
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `fallback route consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 fallback route 快照：
+- currentStep: synchronized with blocking.fallback / nextSteps[2] / fallback route markers
+- blocking.fallback / nextSteps[2] snapshot: 若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。
+- latestAudit: synchronized with the same fallback route baseline
+- execution-state.json / VERIFICATION_RECORD.md: synchronized with the same fallback route narrative
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“当前 cron 实际按哪条 fallback route 续跑，是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
+- 后续若 cron 改写了 `blocking.fallback` 或 `nextSteps[2]`，却漏掉 `currentStep` / 验证记录中的 fallback route 语义，脚本会直接 FAIL，进一步降低续跑路径记录漂移风险
