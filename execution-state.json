@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T03:03:30+08:00",
-  "currentStep": "本轮已为 .vscode/、workflows/、utils/、utils/supabase/、supabase/functions 补齐目录级 README 归档说明，并将 .vscode 忽略规则调整为保留 README 可追踪，继续压缩根工作区历史单体残留目录的误判空间。",
+  "updatedAt": "2026-03-09T03:11:59+08:00",
+  "currentStep": "本轮已为 supabase/functions/server、guidelines、src/app/context、src/app/utils、src/app/components、src/app/components/ui、src/app/components/figma、src/app/pages 补齐目录级 README 归档说明，并校验根工作区（排除三端子仓库）已无缺 README 的历史目录。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "2bc9a70f85cc41c72b236c15f40d8c7dee74fc37"
+    "workspace-root": "8b44f90d031f9899269ca031aef1a442b3f841d8"
   },
   "blocking": {
     "status": "partial",
@@ -135,7 +135,10 @@
       "已在根工作区提交 docs: add archive notes for root src tree（d55a7fc）",
       "已为 .vscode/、workflows/、utils/、utils/supabase/、supabase/functions 新增 README 级归档说明，并完成 grep/find 落盘校验",
       "已将根仓库 .gitignore 调整为继续忽略 .vscode 配置但保留 .vscode/README.md 可追踪",
-      "已在根工作区提交 docs: add archive notes for remaining root dirs（00dd12e）"
+      "已在根工作区提交 docs: add archive notes for remaining root dirs（00dd12e）",
+      "本轮已为 supabase/functions/server、guidelines、src/app/context、src/app/utils、src/app/components、src/app/components/ui、src/app/components/figma、src/app/pages 新增 README 级归档说明",
+      "已执行目录扫描与 grep 校验，确认根工作区（排除 .git、三端子仓库、node_modules）已无缺 README 的历史目录，新增 README 均命中 Archived root workspace / 历史归档标识",
+      "已在根工作区提交 docs: add archive notes for remaining root source dirs（a5fe924）"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },

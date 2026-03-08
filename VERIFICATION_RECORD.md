@@ -234,3 +234,28 @@
 1. 优先补齐 `SUPABASE_SERVICE_ROLE_KEY`，完成真实数据库 / 对象存储联调
 2. 补充一组可用测试账号（普通用户 + 管理员），再执行登录后核心页面截图回归
 3. 如短期仍无法补齐凭据，可转向清理根工作区历史单体文档与仓库说明
+
+
+### 10. 为剩余未覆盖的历史源码目录补齐 README 级归档说明
+本轮继续沿着“目录层级先提示归档身份”的思路，补齐此前仍缺少 `README.md` 的历史目录：
+- `supabase/functions/server/README.md`
+- `guidelines/README.md`
+- `src/app/context/README.md`
+- `src/app/utils/README.md`
+- `src/app/components/README.md`
+- `src/app/components/ui/README.md`
+- `src/app/components/figma/README.md`
+- `src/app/pages/README.md`
+
+处理方式：
+- 在每个目录级 README 中统一标注 `Archived root workspace`
+- 明确这些目录仅保留拆分前单体的历史 server / guideline / context / utils / components / pages 结构
+- 统一指回根目录 `README.md`、`START_HERE.md`、`THREE-APP-DEPLOYMENT.md` 与三端子仓库
+
+验证方式：
+- 运行目录扫描脚本，确认根工作区（排除 `.git`、三端子仓库、`node_modules`）**不再存在缺少 `README.md` 的目录**
+- 使用 `grep -nE "Archived root workspace|历史归档"` 校验上述 8 份 README 均命中归档标识
+
+结论：
+- 根工作区历史源码/配置目录已全部补齐目录级归档说明
+- 进入任一残留目录时，均能在目录层直接看到“这里不是当前开发入口”的提示，进一步压缩误把根目录旧单体结构当成现行代码库的空间
