@@ -175,6 +175,26 @@
 - 根工作区剩余高风险“旧单体执行入口”已继续封口
 - 后续即便误在根目录执行常见脚本，也会被明确引导到三端子仓库
 
+### 8. 为 src 目录树补齐目录级归档说明
+本轮继续处理根工作区中“文件已归档、但目录层级仍像现行源码入口”的残留认知风险，新增以下目录说明：
+- `src/README.md`
+- `src/app/README.md`
+- `src/styles/README.md`
+- `src/imports/README.md`
+
+处理方式：
+- 在每个目录放置统一的归档说明，明确这些目录属于拆分前单体历史结构
+- 在说明中统一指回 `README.md`、`START_HERE.md`、`THREE-APP-DEPLOYMENT.md`
+- 明确告知当前开发应进入 `heart-plant/`、`heart-plant-admin/`、`heart-plant-api/`
+
+验证方式：
+- `grep -nH "归档说明（2026-03-09）\|Archived root workspace" src/README.md src/app/README.md src/styles/README.md src/imports/README.md`
+- `git status --short` 确认本轮新增文件仅为 4 份目录级 README（另有未跟踪的 `EXECUTION_PLAN.md` 为外部计划文件）
+
+结论：
+- 进入 `src/` 及其关键子目录时，现已能在目录层级直接看到“三端分离后这里是历史归档”的提示
+- 根工作区剩余源码树的误判风险进一步下降
+
 ## 本轮结论
 - B8 用户端 UI 一致性检查：通过
 - C8 管理后台 UI 一致性检查：通过
