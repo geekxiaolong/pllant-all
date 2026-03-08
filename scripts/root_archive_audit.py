@@ -4,12 +4,14 @@ from __future__ import annotations
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 EXCLUDED_NAMES = {'.git', 'node_modules', 'heart-plant', 'heart-plant-admin', 'heart-plant-api'}
 MANIFEST = ROOT / 'ROOT_ARCHIVE_MANIFEST.md'
 EXECUTION_STATE = ROOT / 'execution-state.json'
+VERIFICATION_RECORD = ROOT / 'VERIFICATION_RECORD.md'
 
 TOP_LEVEL_EXPECTED = {
     '.gitignore',
@@ -434,6 +436,7 @@ BLOCKER_SECTION_REQUIREMENTS = {
 }
 
 FIRST_SCREEN_LINE_LIMIT = 20
+VERIFICATION_TIMESTAMP_RE = re.compile(r'^更新时间：(?P<stamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \(Asia/Shanghai\)$', re.MULTILINE)
 
 
 def should_skip(path: Path) -> bool:
@@ -734,6 +737,58 @@ def blocker_consistency_gaps() -> list[str]:
     return gaps
 
 
+def verification_record_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    updated_at = state.get('updatedAt', '')
+    current_step = state.get('currentStep', '')
+    match = VERIFICATION_TIMESTAMP_RE.search(verification_text)
+    if not match:
+        gaps.append('verification record timestamp missing :: VERIFICATION_RECORD.md -> 更新时间')
+        verification_stamp = ''
+    else:
+        verification_stamp = match.group('stamp')
+
+    try:
+        state_stamp = datetime.fromisoformat(updated_at).strftime('%Y-%m-%d %H:%M')
+    except ValueError:
+        gaps.append(f'execution-state updatedAt invalid isoformat :: {updated_at}')
+        state_stamp = ''
+
+    if state_stamp and verification_stamp and state_stamp != verification_stamp:
+        gaps.append(
+            'verification timestamp mismatch :: '
+            f'execution-state.json={state_stamp} vs VERIFICATION_RECORD.md={verification_stamp}'
+        )
+
+    required_current_step_markers = (
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'python3 scripts/root_archive_audit.py',
+        'RESULT: PASS',
+    )
+    for marker in required_current_step_markers:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing marker :: {marker}')
+
+    required_verification_markers = (
+        'execution-state.json',
+        'python3 scripts/root_archive_audit.py',
+        'RESULT: PASS',
+        '更新时间：',
+    )
+    for marker in required_verification_markers:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD marker missing :: {marker}')
+
+    if '最近一轮归档审计记录同步校验' not in verification_text:
+        gaps.append('VERIFICATION_RECORD missing latest audit section :: 最近一轮归档审计记录同步校验')
+
+    return gaps
+
+
 def main() -> int:
     manifest_text = MANIFEST.read_text(encoding='utf-8')
     entries = top_level_entries()
@@ -749,6 +804,7 @@ def main() -> int:
     retained_issues = retained_baseline_gaps(manifest_text)
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
+    verification_record_issues = verification_record_consistency_gaps()
 
     print('== Root archive audit ==')
     print(f'root: {ROOT}')
@@ -765,6 +821,7 @@ def main() -> int:
     print(f'retained baseline issues: {len(retained_issues)}')
     print(f'doc reference issues: {len(doc_reference_issues)}')
     print(f'blocker consistency issues: {len(blocker_consistency_issues)}')
+    print(f'verification record consistency issues: {len(verification_record_issues)}')
 
     if missing_readmes:
         print('\n[missing README dirs]')
@@ -802,6 +859,9 @@ def main() -> int:
     if blocker_consistency_issues:
         print('\n[blocker consistency issues]')
         print('\n'.join(blocker_consistency_issues))
+    if verification_record_issues:
+        print('\n[verification record consistency issues]')
+        print('\n'.join(verification_record_issues))
 
     failed = bool(
         missing_readmes
@@ -816,6 +876,7 @@ def main() -> int:
         or retained_issues
         or doc_reference_issues
         or blocker_consistency_issues
+        or verification_record_issues
     )
     if failed:
         print('\nRESULT: FAIL')

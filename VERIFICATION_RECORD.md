@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 04:56 (Asia/Shanghai)
+更新时间：2026-03-09 05:06 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -531,3 +531,34 @@
 结论：
 - 历史文档/脚本/目录说明的“首屏归档提示 + 主导航回指”已形成显式审计基线
 - 后续若有人误删、后移或弱化头部提示，脚本会直接 FAIL，降低历史文档头部说明漂移风险
+
+### 21. 最近一轮归档审计记录同步校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，让根工作区归档巡检不仅检查文档/脚本本体，还校验最近一轮审计记录是否在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 之间保持同步。
+
+新增校验项：
+- 新增 `VERIFICATION_RECORD.md` 文件句柄与 `更新时间` 提取正则
+- 新增 `verification_record_consistency_gaps()`，校验：
+  - `execution-state.json -> updatedAt` 与 `VERIFICATION_RECORD.md` 顶部 `更新时间` 的分钟级时间戳一致
+  - `execution-state.json -> currentStep` 必须显式提到 `execution-state.json`、`VERIFICATION_RECORD.md`、`python3 scripts/root_archive_audit.py` 与 `RESULT: PASS`
+  - `VERIFICATION_RECORD.md` 必须继续保留上述审计摘要标识，并包含本节“最近一轮归档审计记录同步校验”
+- 将上述结果接入脚本总输出，新增 `verification record consistency issues` 汇总项
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 新规则发现 4 处真实不同步：
+     - `execution-state.json=2026-03-09 04:59` 与 `VERIFICATION_RECORD.md=2026-03-09 04:56` 时间戳不一致
+     - `execution-state.json -> currentStep` 未显式提到 `execution-state.json`
+     - `execution-state.json -> currentStep` 未显式提到 `VERIFICATION_RECORD.md`
+     - `VERIFICATION_RECORD.md` 缺少“最近一轮归档审计记录同步校验”段落
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 同步更新 `VERIFICATION_RECORD.md` 顶部时间戳与本节记录
+   - 同步回写 `execution-state.json -> currentStep`，补齐本轮审计摘要与两份记录文件指针
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“最近一轮审计结果 / 时间戳 / 摘要是否在状态文件与验证记录之间同步”这一层约束
+- 后续若 cron 只更新其中一份文件、漏写审计结论，脚本会直接 FAIL，降低进度记录漂移风险
+- 本轮已提交根仓库最新本地提交（`chore: validate audit record sync`）；随后执行 `git push origin HEAD` 仍失败，错误为 `origin does not appear to be a git repository`
