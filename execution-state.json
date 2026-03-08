@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T02:14:00+08:00",
-  "currentStep": "已继续清理根工作区剩余历史单体残留：本轮新增归档 ATTRIBUTIONS.md、LICENSE/main.tsx、src/app/App.tsx、src/styles/index.css、supabase/functions/server/* 与 utils/supabase/info.tsx，并完成归档标记与运行守卫校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
+  "updatedAt": "2026-03-09T02:17:00+08:00",
+  "currentStep": "已继续清理根工作区剩余历史单体残留：本轮在前序归档 ATTRIBUTIONS/LICENSE/src/app/supabase/utils 基础上，继续将 src/imports/*.md 与剩余 src/styles/*.css 统一改为历史归档说明，并完成归档标识校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "0581c165b025e2f7d646872adb446d3f732001f0"
+    "workspace-root": "b35727c4e0becf2bec03020883f8ea191d380699"
   },
   "blocking": {
     "status": "partial",
@@ -118,7 +118,10 @@
       "本轮已将 src/app/App.tsx 与 src/styles/index.css 改为 Archived root workspace 守卫/说明，阻止继续把根目录旧前端入口与样式入口当作当前运行源码",
       "本轮已将 supabase/functions/server/index.tsx、kv_store.tsx 及 utils/supabase/info.tsx 改为归档守卫/说明，阻止继续误用根目录历史 Supabase 函数与配置元信息",
       "已执行 grep 校验 7 处归档标识命中，并执行 deno run supabase/functions/server/index.tsx 与 kv_store.tsx，确认均仅抛出 Archived root workspace 错误后中止",
-      "已在根工作区提交 docs: archive remaining root supabase and app stubs（0581c16）"
+      "已在根工作区提交 docs: archive remaining root supabase and app stubs（0581c16）",
+      "本轮已将 src/imports/*.md 与 src/styles/custom.css、fonts.css、tailwind.css、theme.css 改为历史归档说明，避免继续把根目录旧 PRD 与样式文件当作当前产品规范或构建输入",
+      "已执行 grep 校验 8 处 src/imports/styles 归档标识命中",
+      "已在根工作区提交 docs: archive remaining root imports and styles（b35727c）"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
