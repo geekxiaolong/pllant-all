@@ -1,0 +1,26 @@
+name: Archived root deploy workflow
+
+# Updated: 2026-03-09 01:39 Asia/Shanghai
+#
+# Root monolith CI/CD has been retired after the three-app split.
+# Keep this file only as an archive marker so the workspace history remains
+# understandable, but do not restore it as the active deployment pipeline.
+#
+# Active targets:
+#   - heart-plant/        user frontend
+#   - heart-plant-admin/  admin frontend
+#   - heart-plant-api/    backend API
+#   - THREE-APP-DEPLOYMENT.md
+
+on:
+  workflow_dispatch:
+
+jobs:
+  archived:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archived root workflow marker
+        run: |
+          echo "Archived root workflow: monolith deploy pipeline retired."
+          echo "Use heart-plant / heart-plant-admin / heart-plant-api instead."
+          echo "See THREE-APP-DEPLOYMENT.md for the maintained deployment path."

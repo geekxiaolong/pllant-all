@@ -1,0 +1,14 @@
+# Archived root docker compose
+# Updated: 2026-03-09 01:39 Asia/Shanghai
+#
+# This root workspace is no longer deployed as a single monolith.
+# Do NOT use this file as the active deployment entrypoint.
+# Use these repos/docs instead:
+#   - ./heart-plant            (user frontend)
+#   - ./heart-plant-admin      (admin frontend)
+#   - ./heart-plant-api        (backend API)
+#   - ./THREE-APP-DEPLOYMENT.md
+#
+# This file is intentionally reduced to an archived marker to prevent
+# accidental deployment of the legacy root monolith flow.
+services: {}
