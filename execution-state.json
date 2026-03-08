@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T01:49:00+08:00",
-  "currentStep": "已继续清理根工作区剩余旧单体/流媒体入口：本轮完成根目录 index.html、vite.config.ts 与 stream-server/start.sh/.bat 归档改写并验证，阻止继续误用根目录 Vite 与子目录旧流媒体启动脚本；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归，如仍缺凭据则继续清理根目录其余历史单体文件",
+  "updatedAt": "2026-03-09T02:02:00+08:00",
+  "currentStep": "已继续清理根工作区剩余旧单体源码/配置入口：本轮完成 src/main.tsx、stream-server/ffmpeg-websocket-server.ts、stream-server/webrtc-server.ts 与 nginx/nginx.conf 归档改写并验证，阻止继续误用根目录前端源码、旧流媒体 Deno 服务与历史 Nginx 部署配置；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归，如仍缺凭据则继续清理根工作区其余历史单体残留文件。",
   "completed": [
     "A1",
     "A2",
@@ -31,7 +31,8 @@
     "D2",
     "D4",
     "D5",
-    "D6"
+    "D6",
+    "D3"
   ],
   "recentCommits": {
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
@@ -100,13 +101,18 @@
       "本轮已将 stream-server/start.sh 与 stream-server/start.bat 改为归档提示脚本，阻止继续使用子目录旧流媒体启动入口",
       "已执行 sed/head 校验上述 4 处归档内容，并执行 bash ./stream-server/start.sh 验证仅输出 Archived root script 提示后中止",
       "已在根工作区提交 docs: archive remaining root vite and stream entrypoints（3dc89ae）",
-      "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端"
+      "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端",
+      "本轮已将 src/main.tsx 改为 Archived root workspace 静态提示，阻止继续误用根目录旧单体前端源码入口",
+      "本轮已将 stream-server/ffmpeg-websocket-server.ts 与 stream-server/webrtc-server.ts 改为归档错误守卫，清除根目录旧流媒体 Deno 原型入口与历史 RTSP 配置",
+      "本轮已将 nginx/nginx.conf 改为根工作区历史归档说明，阻止继续误用旧单体 Nginx 部署配置",
+      "已执行 head/cat + grep 校验上述 4 处归档标识与三端导航说明",
+      "已执行 deno run stream-server/ffmpeg-websocket-server.ts，确认仅抛出 Archived root workspace 错误并中止"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续清理根工作区剩余历史单体文档与 GitHub 说明"
+    "如仍缺少凭据，继续清理根工作区其余历史单体残留文件（如 postcss/guidelines 等仅历史用途文件）"
   ]
 }
