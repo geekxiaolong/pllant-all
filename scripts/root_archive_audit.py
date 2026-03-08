@@ -503,8 +503,8 @@ RECENT_COMMIT_REPOS = {
 }
 
 RECENT_COMMIT_REQUIRED_MARKERS = {
-    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
+    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_RECENT_COMMITS_HEADING = '### 26. recentCommits 与仓库 HEAD 显式校验'
@@ -514,6 +514,9 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
     'git log -3 --format=%H',
     'HEAD~1',
     'HEAD~2',
+    'git -C heart-plant remote get-url origin',
+    'git -C heart-plant-admin remote get-url origin',
+    'git -C heart-plant-api remote get-url origin',
     'heart-plant',
     'heart-plant-admin',
     'heart-plant-api',
@@ -1314,6 +1317,20 @@ def git_recent_heads(path: Path, limit: int = 2) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def git_origin_url(path: Path) -> str:
+    result = subprocess.run(
+        ['git', 'remote', 'get-url', 'origin'],
+        cwd=path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip() or 'unknown git error'
+        raise RuntimeError(stderr)
+    return result.stdout.strip()
+
+
 def root_head_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1619,6 +1636,17 @@ def recent_commit_consistency_gaps() -> list[str]:
                 expected_marker = f'- {repo_name}: {actual}'
                 if expected_marker not in section_text:
                     gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {expected_marker}')
+                try:
+                    origin_url = git_origin_url(repo_path)
+                except RuntimeError as exc:
+                    gaps.append(f'git origin lookup failed :: {repo_name} -> {exc}')
+                else:
+                    expected_origin_command = f'- git -C {repo_name} remote get-url origin: {origin_url}'
+                    if expected_origin_command not in section_text:
+                        gaps.append(
+                            'VERIFICATION_RECORD recent commit origin marker missing :: '
+                            f'{expected_origin_command}'
+                        )
 
     return gaps
 

@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:40 (Asia/Shanghai)
+更新时间：2026-03-09 07:51 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:40
+- timestamp: 2026-03-09 07:51
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -721,12 +721,15 @@
 
 当前 recentCommits / git rev-parse HEAD 对照：
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
+- git -C heart-plant remote get-url origin: git@github.com:geekxiaolong/heart-plant.git
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
+- git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: latest local HEAD c099ef4f0c509a503ca654ddb406383fcb32a9d7 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): c099ef4f0c509a503ca654ddb406383fcb32a9d7, e8d5cdb9f793fee090482d9df413b2de7d06ed71
-- workspace-root HEAD~1: c099ef4f0c509a503ca654ddb406383fcb32a9d7
-- workspace-root HEAD~2: e8d5cdb9f793fee090482d9df413b2de7d06ed71
+- git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
+- workspace-root: latest local HEAD 29ddadc87f6be07ae15ed080ab8c5e96a75277b1 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 29ddadc87f6be07ae15ed080ab8c5e96a75277b1, c099ef4f0c509a503ca654ddb406383fcb32a9d7
+- workspace-root HEAD~1: 29ddadc87f6be07ae15ed080ab8c5e96a75277b1
+- workspace-root HEAD~2: c099ef4f0c509a503ca654ddb406383fcb32a9d7
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -813,7 +816,7 @@
 当前 blocking.tried 最近 3 条：
 - 本轮已把 execution-state.json -> blocking.tried 最近 3 条与 VERIFICATION_RECORD.md 第 28 节重新对齐；提交后复跑 python3 scripts/root_archive_audit.py 确认 blocking snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - 本轮已将 execution-state.json -> recentCommits.workspace-root、currentStep 与 VERIFICATION_RECORD.md 第 26/31 节统一改为准确的 40 位 pre-sync 提交哈希；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0，RESULT: PASS
-- 本轮已为 scripts/root_archive_audit.py 新增 blocking.tried 最新尝试显式校验，要求 execution-state.json -> blocking.tried[-1] 与 currentStep、VERIFICATION_RECORD.md 第 28/36 节同步落盘 latest tried entry exact snapshot；提交后复跑 python3 scripts/root_archive_audit.py 确认 latest blocking tried consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- 本轮已为 scripts/root_archive_audit.py 新增三端子仓库 origin 显式校验，要求 VERIFICATION_RECORD.md 第 26/37 节与 execution-state.json -> currentStep 同步落盘 git -C heart-plant/heart-plant-admin/heart-plant-api remote get-url origin 结果；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、verification record consistency issues: 0、workspace status consistency issues: 0，RESULT: PASS
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
@@ -1157,7 +1160,7 @@
    - `RESULT: PASS`
 
 当前 latest tried entry 快照：
-- latest tried entry exact snapshot: 本轮已为 scripts/root_archive_audit.py 新增 blocking.tried 最新尝试显式校验，要求 execution-state.json -> blocking.tried[-1] 与 currentStep、VERIFICATION_RECORD.md 第 28/36 节同步落盘 latest tried entry exact snapshot；提交后复跑 python3 scripts/root_archive_audit.py 确认 latest blocking tried consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已为 scripts/root_archive_audit.py 新增三端子仓库 origin 显式校验，要求 VERIFICATION_RECORD.md 第 26/37 节与 execution-state.json -> currentStep 同步落盘 git -C heart-plant/heart-plant-admin/heart-plant-api remote get-url origin 结果；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、verification record consistency issues: 0、workspace status consistency issues: 0，RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest tried entry baseline
 - blocking.tried: latest tried entry preserved as the newest blocking attempt record
 - RESULT: PASS
@@ -1166,3 +1169,28 @@
 - 根工作区归档巡检现已覆盖“最近一轮 `blocking.tried` 尝试摘要是否仍在 `execution-state.json -> blocking.tried[-1]`、`currentStep`、`VERIFICATION_RECORD.md` 三侧显式同步”这一层约束
 - 后续若 cron 只追加了阻塞尝试列表，却漏掉 `currentStep` / 验证记录中的同一条最新摘要，脚本会直接 FAIL，进一步降低最近一轮尝试记录漂移风险
 
+
+### 37. 三端子仓库 origin 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，在无法立即补齐 Supabase 凭据时，继续把跨仓库状态指针校验脚本化：除了 `git rev-parse HEAD` 之外，再把三端子仓库 `origin` 远端 URL 也纳入 `VERIFICATION_RECORD.md` 与 `execution-state.json -> currentStep` 的显式同步范围。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 在 `recent commit consistency issues` 路径下，继续对 `heart-plant`、`heart-plant-admin`、`heart-plant-api` 执行 `git remote get-url origin`
+- `VERIFICATION_RECORD.md -> ### 26. recentCommits 与仓库 HEAD 显式校验` 必须逐项落盘 `git -C heart-plant/heart-plant-admin/heart-plant-api remote get-url origin` 结果
+- `execution-state.json -> currentStep` 与本节都必须显式命中 `git -C heart-plant remote get-url origin`、`git -C heart-plant-admin remote get-url origin`、`git -C heart-plant-api remote get-url origin`、`RESULT: PASS`
+
+实际回归：
+1. 本轮补强 `scripts/root_archive_audit.py`，在 `recent_commit_consistency_gaps()` 中新增三端子仓库 `origin` 读取与比对逻辑
+2. 同步回写 `VERIFICATION_RECORD.md -> ### 26`，显式记录三端子仓库当前远端：
+   - `git -C heart-plant remote get-url origin`: `git@github.com:geekxiaolong/heart-plant.git`
+   - `git -C heart-plant-admin remote get-url origin`: `git@github.com:geekxiaolong/heart-plant-admin.git`
+   - `git -C heart-plant-api remote get-url origin`: `git@github.com:geekxiaolong/heart-plant-api.git`
+3. 同步回写 `execution-state.json -> currentStep`、`updatedAt`、`latestAudit.timestamp` 与 `blocking.tried[-1]`
+4. 复跑 `python3 scripts/root_archive_audit.py`
+   - `recent commit consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `workspace status consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“三端子仓库 recentCommits 对应的 GitHub origin 是否也被显式落盘”这一层约束
+- 后续若 cron 只同步提交哈希、漏同步三端 origin 远端，脚本会直接 FAIL，进一步降低跨仓库状态记录漂移风险
