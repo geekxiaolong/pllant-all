@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T00:34:00+08:00",
-  "currentStep": "D6. 补充部署说明",
+  "updatedAt": "2026-03-09T00:36:00+08:00",
+  "currentStep": "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
   "completed": [
     "A1",
     "A2",
@@ -30,16 +30,18 @@
     "D1",
     "D2",
     "D4",
-    "D5"
+    "D5",
+    "D6"
   ],
   "recentCommits": {
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
-    "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646"
+    "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
+    "workspace-root": "3166b95"
   },
   "blocking": {
     "status": "partial",
-    "point": "真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；但 API 本地监听、前端构建与 UI 一致性检查已完成",
+    "point": "真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；当前可继续推进的拆分、构建、UI 检查、部署文档已基本完成",
     "tried": [
       "补充本地默认 SUPABASE_URL / anon key 回落，避免无环境变量时服务启动失败",
       "使用 DEV_ADMIN_BYPASS_TOKEN 验证 /admin/users 与 /admin/plants 路由可达性",
@@ -58,13 +60,15 @@
       "已完成用户端登录页浏览器快照检查，页面文案/布局正常",
       "已完成管理后台登录页浏览器快照检查，页面文案/布局正常",
       "已完成拆分后页面/组件/样式与原单体同名文件 diff 校验，差异主要集中在 API URL 与请求头封装替换",
-      "已新增 VERIFICATION_RECORD.md 记录本轮 UI 一致性与运行验证结果"
+      "已新增 VERIFICATION_RECORD.md 记录本轮 UI 一致性与运行验证结果",
+      "已新增 THREE-APP-DEPLOYMENT.md 补充三端分离后的独立部署说明",
+      "已在工作区根仓库提交 docs: add split verification record（3166b95）"
     ],
-    "fallback": "继续推进 D6 部署说明；待补充 SUPABASE_SERVICE_ROLE_KEY 后再做真实写库/存储联调与登录后深层业务回归"
+    "fallback": "待补充 SUPABASE_SERVICE_ROLE_KEY 后，优先执行真实写库/上传/签名 URL 联调；如短期无法补齐，可先补登录后业务页面截图回归"
   },
   "nextSteps": [
-    "补充部署说明",
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
-    "补充登录后核心页面截图回归"
+    "补充登录后核心页面截图回归",
+    "如需要，继续清理根工作区历史单体文档与仓库说明"
   ]
 }
