@@ -433,6 +433,8 @@ BLOCKER_SECTION_REQUIREMENTS = {
     },
 }
 
+FIRST_SCREEN_LINE_LIMIT = 20
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -502,6 +504,23 @@ def navigation_marker_gaps() -> list[str]:
         text = path.read_text(encoding='utf-8', errors='ignore')
         if not has_any_marker(text, NAV_MARKERS):
             missing.append(f'{rel} :: missing navigation marker')
+    return missing
+
+
+def first_screen_archive_notice_gaps() -> list[str]:
+    missing: list[str] = []
+    for rel in sorted(ARCHIVE_TARGETS):
+        path = ROOT / rel
+        if not path.exists():
+            missing.append(f'{rel} :: missing file')
+            continue
+        text = path.read_text(encoding='utf-8', errors='ignore')
+        snippet = '\n'.join(text.splitlines()[:FIRST_SCREEN_LINE_LIMIT])
+        if not has_any_marker(snippet, ARCHIVE_MARKERS):
+            missing.append(f'{rel} :: first-screen archive marker missing (top {FIRST_SCREEN_LINE_LIMIT} lines)')
+            continue
+        if not has_any_marker(snippet, NAV_MARKERS):
+            missing.append(f'{rel} :: first-screen navigation marker missing (top {FIRST_SCREEN_LINE_LIMIT} lines)')
     return missing
 
 
@@ -724,6 +743,7 @@ def main() -> int:
     unexpected = unexpected_entries(entries)
     archive_gaps = archive_marker_gaps()
     navigation_gaps = navigation_marker_gaps()
+    first_screen_notice_gaps = first_screen_archive_notice_gaps()
     manifest_section_issues = manifest_section_gaps(manifest_text)
     manifest_classification_issues = manifest_classification_coverage_gaps()
     retained_issues = retained_baseline_gaps(manifest_text)
@@ -739,6 +759,7 @@ def main() -> int:
     print(f'unexpected top-level entries: {len(unexpected)}')
     print(f'archive marker gaps: {len(archive_gaps)}')
     print(f'navigation marker gaps: {len(navigation_gaps)}')
+    print(f'first-screen archive notice gaps: {len(first_screen_notice_gaps)}')
     print(f'manifest section issues: {len(manifest_section_issues)}')
     print(f'manifest classification issues: {len(manifest_classification_issues)}')
     print(f'retained baseline issues: {len(retained_issues)}')
@@ -763,6 +784,9 @@ def main() -> int:
     if navigation_gaps:
         print('\n[navigation marker gaps]')
         print('\n'.join(navigation_gaps))
+    if first_screen_notice_gaps:
+        print('\n[first-screen archive notice gaps]')
+        print('\n'.join(first_screen_notice_gaps))
     if manifest_section_issues:
         print('\n[manifest section issues]')
         print('\n'.join(manifest_section_issues))
@@ -786,6 +810,7 @@ def main() -> int:
         or unexpected
         or archive_gaps
         or navigation_gaps
+        or first_screen_notice_gaps
         or manifest_section_issues
         or manifest_classification_issues
         or retained_issues

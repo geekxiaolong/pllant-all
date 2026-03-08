@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 03:24 (Asia/Shanghai)
+更新时间：2026-03-09 04:56 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -513,3 +513,21 @@
 结论：
 - 根工作区归档巡检已进一步覆盖“阻塞说明是否写在正确段落/锚点下”这一层约束
 - 后续若有人删掉阻塞 heading、把硬阻塞只散落在正文其他地方、或未同步到预期风险段，脚本可直接失败并暴露缺口
+
+### 20. 根工作区归档文档首屏提示基线校验
+本轮继续沿着“缺凭据时优先推进可验证代码与归档治理”的 fallback 路线，补强 `scripts/root_archive_audit.py`：
+- 新增 `FIRST_SCREEN_LINE_LIMIT = 20`
+- 新增 `first_screen_archive_notice_gaps()`
+- 对 `ARCHIVE_TARGETS` 内历史文档、历史脚本、历史配置和目录级 `README.md` 统一校验：
+  - 前 20 行必须出现归档标识（如 `归档说明（2026-03-09）` / `Archived root workspace` / `Archived root script` 等）
+  - 前 20 行必须出现主导航或三端子仓库回指（如 `README.md`、`START_HERE.md`、`THREE-APP-DEPLOYMENT.md`、`heart-plant/`、`heart-plant-admin/`、`heart-plant-api/`）
+
+实际回归：
+1. 执行 `python3 scripts/root_archive_audit.py`
+2. 输出结果新增：
+   - `first-screen archive notice gaps: 0`
+   - `RESULT: PASS`
+
+结论：
+- 历史文档/脚本/目录说明的“首屏归档提示 + 主导航回指”已形成显式审计基线
+- 后续若有人误删、后移或弱化头部提示，脚本会直接 FAIL，降低历史文档头部说明漂移风险

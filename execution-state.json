@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T04:50:00+08:00",
-  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，将阻塞项一致性校验升级为按预期 heading/段落校验（README/START_HERE/ROOT_ARCHIVE_MANIFEST/THREE-APP-SPLIT-STATUS/THREE-APP-DEPLOYMENT/DEPLOYMENT/VERIFICATION_RECORD）；首次执行命中 VERIFICATION_RECORD.md 的“测试账号”段落缺口，修正后执行 python3 scripts/root_archive_audit.py 验证 RESULT: PASS。",
+  "updatedAt": "2026-03-09T04:57:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 archived 文档/脚本/配置/目录 README 的“首屏归档说明 + 主导航回指”显式基线校验（前 20 行必须同时命中 archive marker 与 navigation marker）；执行 python3 scripts/root_archive_audit.py 验证 first-screen archive notice gaps: 0，RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -163,13 +163,16 @@
       "已在根工作区提交 chore: validate root archive doc links and blockers（c81697e），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
       "本轮已为 scripts/root_archive_audit.py 新增阻塞段落 heading -> marker 显式基线校验，要求关键阻塞必须落在 README/START_HERE/ROOT_ARCHIVE_MANIFEST/THREE-APP-SPLIT-STATUS/THREE-APP-DEPLOYMENT/DEPLOYMENT/VERIFICATION_RECORD 的预期风险段落中",
       "首次执行 python3 scripts/root_archive_audit.py 命中 VERIFICATION_RECORD.md 剩余风险段未显式写出“测试账号”，修正文档后复跑 RESULT: PASS",
-      "已在根工作区提交 chore: validate blocker sections in archive docs（a1c21b3），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败"
+      "已在根工作区提交 chore: validate blocker sections in archive docs（a1c21b3），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
+      "本轮已为 scripts/root_archive_audit.py 新增 archived 文档/脚本/配置/目录 README 的首屏归档说明 + 主导航回指显式基线校验，要求前 20 行同时命中 archive marker 与 navigation marker",
+      "已执行 python3 scripts/root_archive_audit.py，确认 first-screen archive notice gaps: 0，RESULT: PASS",
+      "已更新 VERIFICATION_RECORD.md 与 execution-state.json，同步本轮首屏提示基线校验结果"
     ],
-    "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充归档标识抽检、README/manifest 一致性检查、retained baseline 与活动目录约束校验），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
+    "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充 archived 头部提示、主导航闭环、阻塞段落锚点、execution-state/verification 记录同步等显式基线校验），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 archived 文档首屏归档说明 + 主导航回指的显式基线校验，避免历史文档头部提示漂移）"
+    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 execution-state.json 与 VERIFICATION_RECORD.md 最近一轮审计结果/时间戳/脚本输出摘要的一致性校验，避免进度记录漂移）"
   ]
 }
