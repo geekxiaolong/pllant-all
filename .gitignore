@@ -1,7 +1,8 @@
 # Archived root workspace ignore rules
 # The active applications live in their own repositories.
 
-.vscode/
+.vscode/*
+!.vscode/README.md
 node_modules/
 
 heart-plant/

@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 01:35 (Asia/Shanghai)
+更新时间：2026-03-09 03:01 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -194,6 +194,28 @@
 结论：
 - 进入 `src/` 及其关键子目录时，现已能在目录层级直接看到“三端分离后这里是历史归档”的提示
 - 根工作区剩余源码树的误判风险进一步下降
+
+### 9. 为剩余历史目录补齐 README 级归档说明
+本轮继续沿着“目录层级也要明确归档身份”的思路，新增以下目录说明：
+- `.vscode/README.md`
+- `workflows/README.md`
+- `utils/README.md`
+- `utils/supabase/README.md`
+- `supabase/functions/README.md`
+
+处理方式：
+- 在目录级 README 中统一标注 `Archived root workspace`
+- 明确这些目录仅保留拆分前根工作区的本地配置、历史工作流或 Supabase/工具残留
+- 统一指回 `README.md`、`START_HERE.md`、`THREE-APP-DEPLOYMENT.md`，并提示当前应进入三端子仓库开发
+
+验证方式：
+- 执行 `grep -R -n "Archived root workspace" .vscode/README.md workflows/README.md utils/README.md utils/supabase/README.md supabase/functions/README.md`
+- 确认 5 份新 README 均命中归档标识
+- 执行 `find .vscode workflows utils supabase/functions -maxdepth 2 -name 'README.md' | sort`，确认目录级说明文件均已落盘
+
+结论：
+- 根工作区剩余缺少目录级提示的历史目录已进一步补齐归档说明
+- 进入编辑器配置、历史工作流、旧 Supabase/工具目录时，能更早看到“这里不是当前开发入口”的提示
 
 ## 本轮结论
 - B8 用户端 UI 一致性检查：通过
