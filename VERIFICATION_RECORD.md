@@ -319,3 +319,31 @@
 结论：
 - 根工作区残余资产总清单已从“主导航索引”进一步提升为“与当前落盘文件基本一致的归档盘点”
 - 后续若继续收口根目录残留文件，可直接以该清单作为基线，减少遗漏与重复清理
+
+### 14. 根工作区归档标识抽检脚本补强
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，将原先仅检查“文件/目录是否存在”的审计提升为“内容级归档标识抽检”。
+
+新增校验项：
+- 历史文档、历史脚本、历史配置、目录级 `README.md` 必须命中至少一个归档标识（如 `归档说明（2026-03-09）`、`Archived root workspace`、`Archived root script` 等）
+- 上述历史文件必须继续命中至少一个三端导航标识（如 `README.md`、`START_HERE.md`、`THREE-APP-DEPLOYMENT.md`、子仓库路径）
+- 维持原有的顶层残余资产清单、目录 `README.md` 覆盖、空目录与异常顶层项检查
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 新规则立即发现 6 处历史文件未被当前 marker 词典覆盖：
+     - `ATTRIBUTIONS.md`
+     - `THREE-APP-SPLIT-STATUS.md`
+     - `docker-compose.yml`
+     - `mediamtx-config.yml`
+     - `mediamtx-config-fixed.yml`
+     - `mediamtx-minimal.yml`
+   - 输出 `RESULT: FAIL`
+2. 根据真实落盘内容补全脚本中的 archive marker 词典（覆盖 `Historical archive notice`、`归档状态说明`、`Archived root docker compose`、`Archived root MediaMTX config` 等已有归档写法）
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `archive marker gaps: 0`
+   - `navigation marker gaps: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检已从“结构层存在性检查”提升到“内容层标识一致性检查”
+- 之后若有人把历史文件改回无归档提示、或删掉三端导航入口，cron 可直接在脚本层发现，而不再依赖人工抽样
