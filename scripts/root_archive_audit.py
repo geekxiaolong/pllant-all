@@ -438,6 +438,7 @@ BLOCKER_SECTION_REQUIREMENTS = {
 FIRST_SCREEN_LINE_LIMIT = 20
 VERIFICATION_TIMESTAMP_RE = re.compile(r'^更新时间：(?P<stamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \(Asia/Shanghai\)$', re.MULTILINE)
 LATEST_AUDIT_SUMMARY_HEADING = '### 22. 最近一轮归档审计摘要（机读对照）'
+LATEST_AUDIT_SUMMARY_TIMESTAMP_PREFIX = '- timestamp: '
 LATEST_AUDIT_SUMMARY_LABELS = (
     'top-level entries checked',
     'missing README dirs',
@@ -758,6 +759,7 @@ def verification_record_summary_section_gaps(
     verification_text: str,
     latest_audit: dict,
     expected_summary: dict[str, int],
+    expected_timestamp: str,
 ) -> list[str]:
     gaps: list[str] = []
     latest_audit_section = extract_heading_section(verification_text, LATEST_AUDIT_SUMMARY_HEADING)
@@ -783,6 +785,24 @@ def verification_record_summary_section_gaps(
                 f'{label} expected {expected_value} got {state_value}'
             )
         marker = f'- {label}: {expected_value}'
+        if marker not in latest_audit_section:
+            gaps.append(f'VERIFICATION_RECORD audit summary marker missing :: {marker}')
+
+    latest_timestamp = latest_audit.get('timestamp')
+    if latest_timestamp is None:
+        gaps.append('execution-state latestAudit.timestamp missing')
+    else:
+        try:
+            latest_audit_stamp = datetime.fromisoformat(latest_timestamp).strftime('%Y-%m-%d %H:%M')
+        except ValueError:
+            gaps.append(f'execution-state latestAudit.timestamp invalid isoformat :: {latest_timestamp}')
+            latest_audit_stamp = ''
+        if latest_audit_stamp and latest_audit_stamp != expected_timestamp:
+            gaps.append(
+                'execution-state latestAudit.timestamp mismatch :: '
+                f'expected {expected_timestamp} got {latest_audit_stamp}'
+            )
+        marker = f'{LATEST_AUDIT_SUMMARY_TIMESTAMP_PREFIX}{expected_timestamp}'
         if marker not in latest_audit_section:
             gaps.append(f'VERIFICATION_RECORD audit summary marker missing :: {marker}')
 
@@ -861,7 +881,14 @@ def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> li
             f'updatedAt={updated_at} vs latestAudit.timestamp={latest_audit_timestamp}'
         )
 
-    gaps.extend(verification_record_summary_section_gaps(verification_text, latest_audit, expected_summary))
+    gaps.extend(
+        verification_record_summary_section_gaps(
+            verification_text,
+            latest_audit,
+            expected_summary,
+            state_stamp,
+        )
+    )
 
     return gaps
 

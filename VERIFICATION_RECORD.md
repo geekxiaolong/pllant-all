@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:10 (Asia/Shanghai)
+更新时间：2026-03-09 05:20 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -586,6 +586,7 @@
    - `RESULT: PASS`
 
 最新审计摘要：
+- timestamp: 2026-03-09 05:20
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -606,4 +607,29 @@
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
 - 后续若 cron 只更新文字总结、不更新机读摘要，脚本会直接 FAIL，进一步降低状态记录漂移风险
+
+### 23. 最近一轮归档审计摘要时间戳显式校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把最近一轮机读摘要中的时间戳也纳入跨文件显式基线校验。
+
+新增校验项：
+- `VERIFICATION_RECORD.md -> ### 22. 最近一轮归档审计摘要（机读对照）` 必须显式包含 `- timestamp: YYYY-MM-DD HH:MM`
+- `scripts/root_archive_audit.py` 会将该时间戳与 `execution-state.json -> updatedAt`、`execution-state.json -> latestAudit.timestamp` 做分钟级对照
+- 若验证记录只更新了 command/result/summary 而漏写 timestamp，脚本将直接报 `RESULT: FAIL`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `verification record consistency issues: 1`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少 `- timestamp: 2026-03-09 05:10`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:20`
+   - 同步回写 `execution-state.json -> updatedAt`、`currentStep` 与 `latestAudit.timestamp`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检已从“摘要项一致”进一步提升到“摘要时间戳也必须显式一致”
+- 后续若 cron 只更新状态文件、不补齐验证记录中的摘要时间戳，脚本会直接 FAIL，进一步降低审计记录漂移风险
 
