@@ -251,7 +251,7 @@
 ## 剩余风险
 1. 受登录态限制，用户端/后台登录后深层业务页面尚未做完整人工点点点回归
 2. 真实写库、上传、签名 URL、存储联调仍依赖 `SUPABASE_SERVICE_ROLE_KEY`
-3. `DEV_ADMIN_BYPASS_TOKEN` 不能替代真实 Supabase 登录态，当前无法仅凭伪造 localStorage session 进入登录后页面
+3. `DEV_ADMIN_BYPASS_TOKEN` 不能替代真实 Supabase 登录态；当前缺少可用测试账号或真实登录凭据，无法仅凭伪造 localStorage session 进入登录后页面
 4. Vite dev server 在短时重复拉起时出现过一次 `esbuild write EPIPE`，重启后恢复，暂未复现为构建问题
 
 ## 建议的下一步
@@ -481,3 +481,35 @@
 结论：
 - 根工作区归档巡检已覆盖“主导航文档闭环引用”与“execution-state 阻塞项是否在各主文档持续同步”两层约束
 - 后续若有人删掉顶层导航回指、漏同步阻塞说明、或把活动脚本目录说明从 retained manifest 中遗漏，脚本可直接失败并暴露缺口
+
+### 19. 阻塞段落锚点显式基线校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，进一步补强 `scripts/root_archive_audit.py`，把原先“主文档只要包含阻塞关键词即可”的校验，升级为“阻塞关键词必须落在预期的阻塞/风险段落下”。
+
+新增校验项：
+- 为以下文档建立显式 heading -> marker 基线，并截取对应段落做局部校验：
+  - `README.md -> ## 当前已知限制`
+  - `START_HERE.md -> ## 当前阻塞提醒`
+  - `ROOT_ARCHIVE_MANIFEST.md -> ## 五、当前仍未解除的硬阻塞`
+  - `THREE-APP-SPLIT-STATUS.md -> ## 当前剩余阻塞（以 execution-state.json 为准）`
+  - `THREE-APP-DEPLOYMENT.md -> ## 8. 当前已知风险`
+  - `DEPLOYMENT.md -> ## 当前已知前置条件`
+  - `VERIFICATION_RECORD.md -> ## 剩余风险`
+- 审计脚本现会额外检查：
+  - 预期 heading 是否仍存在
+  - 关键阻塞词（如 `SUPABASE_SERVICE_ROLE_KEY`、测试账号 / 登录态、`origin`）是否真的出现在该 heading 对应段落里，而不是散落在文档其他位置
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 新规则命中 1 处真实缺口：
+     - `blocker section marker missing :: VERIFICATION_RECORD.md -> ## 剩余风险 requires 测试账号`
+   - 根因是 `VERIFICATION_RECORD.md` 的剩余风险段只写了“真实登录态”，未显式写出“测试账号”字样
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 将 `VERIFICATION_RECORD.md` 中相关风险项改为“当前缺少可用测试账号或真实登录凭据”
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `blocker consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检已进一步覆盖“阻塞说明是否写在正确段落/锚点下”这一层约束
+- 后续若有人删掉阻塞 heading、把硬阻塞只散落在正文其他地方、或未同步到预期风险段，脚本可直接失败并暴露缺口

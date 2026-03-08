@@ -373,6 +373,66 @@ BLOCKER_PHRASES = {
     },
 }
 
+BLOCKER_SECTION_REQUIREMENTS = {
+    'README.md': {
+        'heading': '## 当前已知限制',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            'Supabase 登录态',
+            'origin',
+        ),
+    },
+    'START_HERE.md': {
+        'heading': '## 当前阻塞提醒',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            '登录态',
+            'origin',
+        ),
+    },
+    'ROOT_ARCHIVE_MANIFEST.md': {
+        'heading': '## 五、当前仍未解除的硬阻塞',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            'Supabase 登录态',
+            'origin',
+        ),
+    },
+    'THREE-APP-SPLIT-STATUS.md': {
+        'heading': '## 当前剩余阻塞（以 execution-state.json 为准）',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            'Supabase 登录态',
+            'origin',
+        ),
+    },
+    'THREE-APP-DEPLOYMENT.md': {
+        'heading': '## 8. 当前已知风险',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',),
+    },
+    'DEPLOYMENT.md': {
+        'heading': '## 当前已知前置条件',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            '登录态',
+        ),
+    },
+    'VERIFICATION_RECORD.md': {
+        'heading': '## 剩余风险',
+        'markers': (
+            'SUPABASE_SERVICE_ROLE_KEY',
+            '测试账号',
+            '登录态',
+        ),
+    },
+}
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -602,6 +662,16 @@ def doc_reference_gaps() -> list[str]:
     return gaps
 
 
+def extract_heading_section(text: str, heading: str) -> str:
+    start_match = re.search(rf'^{re.escape(heading)}\s*$', text, re.MULTILINE)
+    if not start_match:
+        return ''
+    start = start_match.end()
+    next_match = re.search(r'^#{1,6}\s+', text[start:], re.MULTILINE)
+    end = start + next_match.start() if next_match else len(text)
+    return text[start:end]
+
+
 def blocker_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -624,6 +694,23 @@ def blocker_consistency_gaps() -> list[str]:
                 gaps.append(
                     'blocker doc marker missing :: '
                     f'{blocker_key} -> {rel} requires {markers}'
+                )
+
+    for rel, spec in sorted(BLOCKER_SECTION_REQUIREMENTS.items()):
+        path = ROOT / rel
+        if not path.exists():
+            gaps.append(f'blocker section doc missing on disk :: {rel}')
+            continue
+        text = path.read_text(encoding='utf-8', errors='ignore')
+        section_text = extract_heading_section(text, spec['heading'])
+        if not section_text:
+            gaps.append(f'blocker section heading missing :: {rel} -> {spec["heading"]}')
+            continue
+        for marker in spec['markers']:
+            if marker not in section_text:
+                gaps.append(
+                    'blocker section marker missing :: '
+                    f'{rel} -> {spec["heading"]} requires {marker}'
                 )
     return gaps
 

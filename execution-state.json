@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T04:34:00+08:00",
-  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增顶层导航文档双向引用矩阵与 execution-state 阻塞项清单一致性校验，并将 scripts/README.md 纳入 ROOT_ARCHIVE_MANIFEST.md retained baseline；执行 python3 scripts/root_archive_audit.py 验证 RESULT: PASS。",
+  "updatedAt": "2026-03-09T04:50:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，将阻塞项一致性校验升级为按预期 heading/段落校验（README/START_HERE/ROOT_ARCHIVE_MANIFEST/THREE-APP-SPLIT-STATUS/THREE-APP-DEPLOYMENT/DEPLOYMENT/VERIFICATION_RECORD）；首次执行命中 VERIFICATION_RECORD.md 的“测试账号”段落缺口，修正后执行 python3 scripts/root_archive_audit.py 验证 RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "c81697e76b9edffed1fe978cbbe190d6b2679f95"
+    "workspace-root": "a1c21b31300747657614bdf609f3abf2ce58716e"
   },
   "blocking": {
     "status": "partial",
@@ -160,13 +160,16 @@
       "本轮已为 scripts/root_archive_audit.py 新增 README.md / START_HERE.md / ROOT_ARCHIVE_MANIFEST.md / THREE-APP-SPLIT-STATUS.md / THREE-APP-DEPLOYMENT.md / DEPLOYMENT.md 的顶层导航文档引用矩阵校验",
       "本轮已新增 execution-state.json 阻塞项一致性校验，确认 SUPABASE_SERVICE_ROLE_KEY、测试账号/登录态、根仓库未配置 origin 等硬阻塞持续同步到主文档",
       "首次执行 python3 scripts/root_archive_audit.py 发现 retained baseline 漏项 scripts/README.md，已补入 ROOT_ARCHIVE_MANIFEST.md 并同步脚本基线后复跑 RESULT: PASS",
-      "已在根工作区提交 chore: validate root archive doc links and blockers（c81697e），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败"
+      "已在根工作区提交 chore: validate root archive doc links and blockers（c81697e），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
+      "本轮已为 scripts/root_archive_audit.py 新增阻塞段落 heading -> marker 显式基线校验，要求关键阻塞必须落在 README/START_HERE/ROOT_ARCHIVE_MANIFEST/THREE-APP-SPLIT-STATUS/THREE-APP-DEPLOYMENT/DEPLOYMENT/VERIFICATION_RECORD 的预期风险段落中",
+      "首次执行 python3 scripts/root_archive_audit.py 命中 VERIFICATION_RECORD.md 剩余风险段未显式写出“测试账号”，修正文档后复跑 RESULT: PASS",
+      "已在根工作区提交 chore: validate blocker sections in archive docs（a1c21b3），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充归档标识抽检、README/manifest 一致性检查、retained baseline 与活动目录约束校验），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充顶层 retained 文档与 archived 文档阻塞段落/导航锚点的显式基线校验，例如 README/START_HERE/ROOT_ARCHIVE_MANIFEST 与 DEPLOYMENT/THREE-APP-DEPLOYMENT 的 blocker mirror 约束）"
+    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 archived 文档首屏归档说明 + 主导航回指的显式基线校验，避免历史文档头部提示漂移）"
   ]
 }
