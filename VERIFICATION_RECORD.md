@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:42 (Asia/Shanghai)
+更新时间：2026-03-09 06:58 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:42
+- timestamp: 2026-03-09 06:58
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -590,6 +590,7 @@
 - blocker consistency issues: 0
 - doc timestamp issues: 0
 - recent commit consistency issues: 0
+- root head consistency issues: 0
 - root remote consistency issues: 0
 - blocking snapshot consistency issues: 0
 - workspace status consistency issues: 0
@@ -896,3 +897,45 @@
 结论：
 - 根工作区归档巡检现已覆盖“根仓库 pre-sync 提交窗口是否在 `execution-state.json -> currentStep`、`execution-state.json -> recentCommits.workspace-root` 与 `VERIFICATION_RECORD.md -> ### 26` 三侧显式同步”这一层约束
 - 后续若 cron 连续做了多轮脚本/文档提交、却没有同步推进 `git log -3 --format=%H` 与 `HEAD~1` / `HEAD~2` 的精确提交链，脚本会直接 FAIL，进一步降低根仓库提交指针漂移风险
+
+
+### 31. 根仓库 current HEAD 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把根仓库 `git rev-parse HEAD` 的可见性也纳入显式校验，但避免将“当前提交哈希”硬编码进已提交文档后又被下一次提交立刻改写的自引用问题。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会显式执行 `git rev-parse HEAD`，要求 `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 都继续命中 `git rev-parse HEAD`、`workspace-root current HEAD`、`workspace-root HEAD~1`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并显式记录“`workspace-root current HEAD` 仅作为命令可见性/语义校验，机读锚点仍以 `HEAD~1` 为准”
+- 审计脚本继续要求 `execution-state.json -> recentCommits.workspace-root` 与 `VERIFICATION_RECORD.md -> ### 26` 对齐根仓库 `HEAD~1`，从而在不引入自引用悖论的前提下维持可重复审计
+- 最近一轮归档审计摘要也已纳入 `root head consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `root head consistency issues: 5`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 31. 根仓库 current HEAD 显式校验`
+     - `execution-state.json -> currentStep` 缺少 `workspace-root current HEAD` 标记
+     - `VERIFICATION_RECORD.md` 正文缺少 `workspace-root current HEAD` 标记
+   - 同时因正在修改 `scripts/root_archive_audit.py`，首次回归阶段根工作区 tracked files 仍为 dirty，额外命中 `workspace status consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 收敛校验语义：保留 `git rev-parse HEAD` 与 `workspace-root current HEAD` 的命令/语义显式校验，但将机读哈希锚点继续固定在 `HEAD~1`，避免把当前提交哈希写入已提交文档造成自引用
+   - 同步回写 `execution-state.json -> currentStep`、`execution-state.json -> recentCommits.workspace-root`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节，并显式落盘 `workspace-root current HEAD` 说明与 `HEAD~1` 锚点
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `root head consistency issues: 0`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前根仓库 current HEAD 校验语义：
+- git rev-parse HEAD: required as an explicit command marker
+- workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
+- workspace-root HEAD~1 anchor: 1008dbb0eb535728ddc73d20b488b648fd87427e
+- currentStep: synchronized with the same markers
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“`git rev-parse HEAD` 的显式可见性 + `workspace-root current HEAD` 语义说明 + `HEAD~1` 机读锚点”这一层约束
+- 后续若 cron 漏写 `git rev-parse HEAD` / `workspace-root current HEAD` 标记，或把 `recentCommits.workspace-root` 从 `HEAD~1` 锚点漂移出去，脚本会直接 FAIL，同时避免引入‘当前提交哈希写进当前提交’这一不可满足约束
+

@@ -456,6 +456,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocker consistency issues',
     'doc timestamp issues',
     'recent commit consistency issues',
+    'root head consistency issues',
     'root remote consistency issues',
     'blocking snapshot consistency issues',
     'workspace status consistency issues',
@@ -516,6 +517,20 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
 ROOT_REMOTE_REQUIRED_MARKERS = {
     'currentStep': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin'),
     'VERIFICATION_RECORD.md': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_ROOT_HEAD_HEADING = '### 31. 根仓库 current HEAD 显式校验'
+VERIFICATION_RECORD_ROOT_HEAD_MARKERS = (
+    'git rev-parse HEAD',
+    'workspace-root current HEAD',
+    'workspace-root HEAD~1',
+    'currentStep',
+    'RESULT: PASS',
+)
+
+ROOT_HEAD_REQUIRED_MARKERS = {
+    'currentStep': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_ROOT_REMOTE_HEADING = '### 27. 根仓库 origin 缺失显式校验'
@@ -1036,6 +1051,62 @@ def git_recent_heads(path: Path, limit: int = 2) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def root_head_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    try:
+        root_head = git_head(ROOT)
+        recent_heads = git_recent_heads(ROOT, limit=3)
+    except RuntimeError as exc:
+        return [f'root head lookup failed :: {exc}']
+
+    if len(recent_heads) < 2:
+        return [f'root recent head lookup returned too few commits :: {recent_heads}']
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_ROOT_HEAD_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing root head section :: '
+            f'{VERIFICATION_RECORD_ROOT_HEAD_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_ROOT_HEAD_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD root head marker missing :: {marker}')
+        head_minus_one_marker = f'- workspace-root HEAD~1 anchor: {recent_heads[1]}'
+        if head_minus_one_marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD root head marker missing :: {head_minus_one_marker}')
+        current_head_note = '- workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility'
+        if current_head_note not in section_text:
+            gaps.append(f'VERIFICATION_RECORD root head marker missing :: {current_head_note}')
+
+    current_step = state.get('currentStep', '')
+    for marker in ROOT_HEAD_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing root head marker :: {marker}')
+    if recent_heads[1] not in current_step:
+        gaps.append(f'execution-state currentStep missing root HEAD~1 hash :: {recent_heads[1]}')
+
+    for marker in ROOT_HEAD_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing root head marker :: {marker}')
+
+    recent_commits = state.get('recentCommits', {})
+    workspace_root_record = recent_commits.get('workspace-root', '') if isinstance(recent_commits, dict) else ''
+    head_match = re.search(r'([0-9a-f]{40})', workspace_root_record)
+    if not head_match:
+        gaps.append('execution-state recentCommits workspace-root missing pre-sync hash for root head check')
+    elif head_match.group(1) != recent_heads[1]:
+        gaps.append(
+            'execution-state recentCommits workspace-root not aligned with HEAD~1 during root head check :: '
+            f'recorded={head_match.group(1)} expected={recent_heads[1]} current={root_head}'
+        )
+
+    return gaps
+
+
 def root_remote_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1424,6 +1495,7 @@ def main() -> int:
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
     recent_commit_issues = recent_commit_consistency_gaps()
+    root_head_issues = root_head_consistency_gaps()
     root_remote_issues = root_remote_consistency_gaps()
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
@@ -1453,6 +1525,7 @@ def main() -> int:
         'blocker consistency issues': len(blocker_consistency_issues),
         'doc timestamp issues': len(doc_timestamp_issues),
         'recent commit consistency issues': len(recent_commit_issues),
+        'root head consistency issues': len(root_head_issues),
         'root remote consistency issues': len(root_remote_issues),
         'blocking snapshot consistency issues': len(blocking_snapshot_issues),
         'workspace status consistency issues': len(workspace_status_issues),
@@ -1508,6 +1581,9 @@ def main() -> int:
     if recent_commit_issues:
         print('\n[recent commit consistency issues]')
         print('\n'.join(recent_commit_issues))
+    if root_head_issues:
+        print('\n[root head consistency issues]')
+        print('\n'.join(root_head_issues))
     if root_remote_issues:
         print('\n[root remote consistency issues]')
         print('\n'.join(root_remote_issues))
@@ -1536,6 +1612,7 @@ def main() -> int:
         or blocker_consistency_issues
         or doc_timestamp_issues
         or recent_commit_issues
+        or root_head_issues
         or root_remote_issues
         or blocking_snapshot_issues
         or workspace_status_issues
