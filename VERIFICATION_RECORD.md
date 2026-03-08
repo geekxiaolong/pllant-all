@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:06 (Asia/Shanghai)
+更新时间：2026-03-09 05:10 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -562,3 +562,48 @@
 - 根工作区归档巡检现已覆盖“最近一轮审计结果 / 时间戳 / 摘要是否在状态文件与验证记录之间同步”这一层约束
 - 后续若 cron 只更新其中一份文件、漏写审计结论，脚本会直接 FAIL，降低进度记录漂移风险
 - 本轮已提交根仓库最新本地提交（`chore: validate audit record sync`）；随后执行 `git push origin HEAD` 仍失败，错误为 `origin does not appear to be a git repository`
+
+### 22. 最近一轮归档审计摘要（机读对照）
+为避免 `execution-state.json` 与 `VERIFICATION_RECORD.md` 只同步“文字结论”而不同步脚本统计项，本轮继续把最近一次 `python3 scripts/root_archive_audit.py` 的输出摘要做成跨文件机读对照。
+
+新增校验项：
+- `execution-state.json -> latestAudit` 必须保存最近一次审计的 `timestamp`、`command`、`result` 与完整 `summary`
+- `VERIFICATION_RECORD.md` 必须新增本节，逐项落盘最近一轮审计统计摘要，供脚本逐行比对
+- `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `verification record consistency issues: 2`
+   - 具体缺口：
+     - `execution-state.json` 缺少 `latestAudit.timestamp`
+     - `VERIFICATION_RECORD.md` 缺少“最近一轮归档审计摘要（机读对照）”段落
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 为 `execution-state.json` 新增 `latestAudit` 结构，落盘最近一轮审计命令、结果与统计摘要
+   - 为 `VERIFICATION_RECORD.md` 新增本节，固化最近一轮审计统计项
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+最新审计摘要：
+- command: python3 scripts/root_archive_audit.py
+- result: PASS
+- top-level entries checked: 57
+- missing README dirs: 0
+- empty dirs: 0
+- manifest missing entries: 0
+- unexpected top-level entries: 0
+- archive marker gaps: 0
+- navigation marker gaps: 0
+- first-screen archive notice gaps: 0
+- manifest section issues: 0
+- manifest classification issues: 0
+- retained baseline issues: 0
+- doc reference issues: 0
+- blocker consistency issues: 0
+- verification record consistency issues: 0
+
+结论：
+- 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
+- 后续若 cron 只更新文字总结、不更新机读摘要，脚本会直接 FAIL，进一步降低状态记录漂移风险
+

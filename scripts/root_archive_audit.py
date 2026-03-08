@@ -437,6 +437,23 @@ BLOCKER_SECTION_REQUIREMENTS = {
 
 FIRST_SCREEN_LINE_LIMIT = 20
 VERIFICATION_TIMESTAMP_RE = re.compile(r'^更新时间：(?P<stamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \(Asia/Shanghai\)$', re.MULTILINE)
+LATEST_AUDIT_SUMMARY_HEADING = '### 22. 最近一轮归档审计摘要（机读对照）'
+LATEST_AUDIT_SUMMARY_LABELS = (
+    'top-level entries checked',
+    'missing README dirs',
+    'empty dirs',
+    'manifest missing entries',
+    'unexpected top-level entries',
+    'archive marker gaps',
+    'navigation marker gaps',
+    'first-screen archive notice gaps',
+    'manifest section issues',
+    'manifest classification issues',
+    'retained baseline issues',
+    'doc reference issues',
+    'blocker consistency issues',
+    'verification record consistency issues',
+)
 
 
 def should_skip(path: Path) -> bool:
@@ -737,13 +754,64 @@ def blocker_consistency_gaps() -> list[str]:
     return gaps
 
 
-def verification_record_consistency_gaps() -> list[str]:
+def verification_record_summary_section_gaps(
+    verification_text: str,
+    latest_audit: dict,
+    expected_summary: dict[str, int],
+) -> list[str]:
+    gaps: list[str] = []
+    latest_audit_section = extract_heading_section(verification_text, LATEST_AUDIT_SUMMARY_HEADING)
+    if not latest_audit_section:
+        return [
+            'VERIFICATION_RECORD missing latest audit summary section :: '
+            f'{LATEST_AUDIT_SUMMARY_HEADING}'
+        ]
+
+    state_summary = latest_audit.get('summary')
+    if not isinstance(state_summary, dict):
+        return ['execution-state latestAudit.summary missing or invalid']
+
+    for label in LATEST_AUDIT_SUMMARY_LABELS:
+        state_value = state_summary.get(label)
+        if not isinstance(state_value, int):
+            gaps.append(f'execution-state latestAudit.summary invalid :: {label}')
+            continue
+        expected_value = expected_summary[label]
+        if state_value != expected_value:
+            gaps.append(
+                'execution-state latestAudit.summary mismatch :: '
+                f'{label} expected {expected_value} got {state_value}'
+            )
+        marker = f'- {label}: {expected_value}'
+        if marker not in latest_audit_section:
+            gaps.append(f'VERIFICATION_RECORD audit summary marker missing :: {marker}')
+
+    latest_result = latest_audit.get('result')
+    if latest_result != 'PASS':
+        gaps.append(f'execution-state latestAudit.result invalid :: {latest_result}')
+    if '- result: PASS' not in latest_audit_section:
+        gaps.append('VERIFICATION_RECORD audit summary marker missing :: - result: PASS')
+
+    latest_command = latest_audit.get('command')
+    if latest_command != 'python3 scripts/root_archive_audit.py':
+        gaps.append(f'execution-state latestAudit.command invalid :: {latest_command}')
+    if '- command: python3 scripts/root_archive_audit.py' not in latest_audit_section:
+        gaps.append(
+            'VERIFICATION_RECORD audit summary marker missing :: '
+            '- command: python3 scripts/root_archive_audit.py'
+        )
+
+    return gaps
+
+
+def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
 
     updated_at = state.get('updatedAt', '')
     current_step = state.get('currentStep', '')
+    latest_audit = state.get('latestAudit', {})
     match = VERIFICATION_TIMESTAMP_RE.search(verification_text)
     if not match:
         gaps.append('verification record timestamp missing :: VERIFICATION_RECORD.md -> 更新时间')
@@ -786,6 +854,15 @@ def verification_record_consistency_gaps() -> list[str]:
     if '最近一轮归档审计记录同步校验' not in verification_text:
         gaps.append('VERIFICATION_RECORD missing latest audit section :: 最近一轮归档审计记录同步校验')
 
+    latest_audit_timestamp = latest_audit.get('timestamp')
+    if latest_audit_timestamp != updated_at:
+        gaps.append(
+            'execution-state latestAudit.timestamp mismatch :: '
+            f'updatedAt={updated_at} vs latestAudit.timestamp={latest_audit_timestamp}'
+        )
+
+    gaps.extend(verification_record_summary_section_gaps(verification_text, latest_audit, expected_summary))
+
     return gaps
 
 
@@ -804,24 +881,30 @@ def main() -> int:
     retained_issues = retained_baseline_gaps(manifest_text)
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
-    verification_record_issues = verification_record_consistency_gaps()
+
+    summary_counts = {
+        'top-level entries checked': len(entries),
+        'missing README dirs': len(missing_readmes),
+        'empty dirs': len(empty_dirs),
+        'manifest missing entries': len(manifest_gaps),
+        'unexpected top-level entries': len(unexpected),
+        'archive marker gaps': len(archive_gaps),
+        'navigation marker gaps': len(navigation_gaps),
+        'first-screen archive notice gaps': len(first_screen_notice_gaps),
+        'manifest section issues': len(manifest_section_issues),
+        'manifest classification issues': len(manifest_classification_issues),
+        'retained baseline issues': len(retained_issues),
+        'doc reference issues': len(doc_reference_issues),
+        'blocker consistency issues': len(blocker_consistency_issues),
+        'verification record consistency issues': 0,
+    }
+    verification_record_issues = verification_record_consistency_gaps(summary_counts)
+    summary_counts['verification record consistency issues'] = len(verification_record_issues)
 
     print('== Root archive audit ==')
     print(f'root: {ROOT}')
-    print(f'top-level entries checked: {len(entries)}')
-    print(f'missing README dirs: {len(missing_readmes)}')
-    print(f'empty dirs: {len(empty_dirs)}')
-    print(f'manifest missing entries: {len(manifest_gaps)}')
-    print(f'unexpected top-level entries: {len(unexpected)}')
-    print(f'archive marker gaps: {len(archive_gaps)}')
-    print(f'navigation marker gaps: {len(navigation_gaps)}')
-    print(f'first-screen archive notice gaps: {len(first_screen_notice_gaps)}')
-    print(f'manifest section issues: {len(manifest_section_issues)}')
-    print(f'manifest classification issues: {len(manifest_classification_issues)}')
-    print(f'retained baseline issues: {len(retained_issues)}')
-    print(f'doc reference issues: {len(doc_reference_issues)}')
-    print(f'blocker consistency issues: {len(blocker_consistency_issues)}')
-    print(f'verification record consistency issues: {len(verification_record_issues)}')
+    for label in LATEST_AUDIT_SUMMARY_LABELS:
+        print(f'{label}: {summary_counts[label]}')
 
     if missing_readmes:
         print('\n[missing README dirs]')

@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T05:06:00+08:00",
-  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 execution-state.json 与 VERIFICATION_RECORD.md 最近一轮归档审计结果/时间戳/脚本输出摘要一致性校验；首次执行 python3 scripts/root_archive_audit.py 命中 verification record consistency issues: 4，暴露 execution-state.json 与 VERIFICATION_RECORD.md 时间戳及最新审计摘要不同步；修正后复跑 python3 scripts/root_archive_audit.py，确认 verification record consistency issues: 0，RESULT: PASS，并已同步更新 execution-state.json / VERIFICATION_RECORD.md、提交根仓库最新本地提交（chore: validate audit record sync）；随后再次尝试 git push origin HEAD，仍因根仓库未配置可用 origin 失败。",
+  "updatedAt": "2026-03-09T05:10:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 latestAudit 机读摘要校验，要求 execution-state.json 与 VERIFICATION_RECORD.md 同步记录最近一轮 python3 scripts/root_archive_audit.py 的统计摘要；首次执行命中 verification record consistency issues: 2，暴露 execution-state.json 缺少 latestAudit.timestamp / summary，且 VERIFICATION_RECORD.md 缺少 “最近一轮归档审计摘要（机读对照）”段落；补齐后复跑确认 verification record consistency issues: 0，RESULT: PASS，并已同步更新 execution-state.json / VERIFICATION_RECORD.md。",
   "completed": [
     "A1",
     "A2",
@@ -174,6 +174,27 @@
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 execution-state.json 与 VERIFICATION_RECORD.md 最近一轮审计结果/时间戳/脚本输出摘要的一致性校验，避免进度记录漂移）"
-  ]
+    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit 机读摘要与阻塞项的跨文件显式基线校验，避免状态记录与审计输出再次漂移）"
+  ],
+  "latestAudit": {
+    "timestamp": "2026-03-09T05:10:00+08:00",
+    "command": "python3 scripts/root_archive_audit.py",
+    "result": "PASS",
+    "summary": {
+      "top-level entries checked": 57,
+      "missing README dirs": 0,
+      "empty dirs": 0,
+      "manifest missing entries": 0,
+      "unexpected top-level entries": 0,
+      "archive marker gaps": 0,
+      "navigation marker gaps": 0,
+      "first-screen archive notice gaps": 0,
+      "manifest section issues": 0,
+      "manifest classification issues": 0,
+      "retained baseline issues": 0,
+      "doc reference issues": 0,
+      "blocker consistency issues": 0,
+      "verification record consistency issues": 0
+    }
+  }
 }
