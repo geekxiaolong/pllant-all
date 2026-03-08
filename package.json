@@ -1,0 +1,15 @@
+{
+  "name": "heartplant-root-archive-workspace",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "echo '[Archived root workspace] Please run dev inside heart-plant/ or heart-plant-admin/, not the root monolith workspace.' && exit 1",
+    "build": "echo '[Archived root workspace] Please build inside heart-plant/ or heart-plant-admin/, not the root monolith workspace.' && exit 1",
+    "deploy": "bash deploy.sh",
+    "deploy:supabase": "bash deploy-supabase.sh",
+    "deploy:all": "bash deploy.sh && bash deploy-supabase.sh",
+    "git:init": "bash git-init.sh",
+    "git:push": "bash git-push.sh"
+  }
+}
