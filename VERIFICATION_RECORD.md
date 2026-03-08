@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 00:34 (Asia/Shanghai)
+更新时间：2026-03-09 00:47 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -112,6 +112,29 @@
 - mock 初始化写入 `kv_store_4b732228` 时仍触发 RLS
 - 根因仍是缺少 `SUPABASE_SERVICE_ROLE_KEY`，不影响本轮 UI 一致性检查
 
+### 5. 登录后核心页面截图回归尝试
+本轮继续尝试补做“登录后核心页面截图回归”，实际操作如下：
+- 本地重新拉起三端：
+  - API：`DEV_ADMIN_BYPASS_TOKEN=local-dev-admin deno task serve`
+  - 用户端：`npm run dev -- --host 127.0.0.1`
+  - 管理后台：`npm run dev -- --host 127.0.0.1`
+- 浏览器访问：
+  - 用户端：`http://127.0.0.1:3000/#/`
+  - 管理后台：`http://127.0.0.1:3001/#/admin`
+- 在浏览器中手动写入 `sb-dkszigraljeptpeiimzg-auth-token`，构造本地 session
+- 通过页面内 `supabase.auth.getSession()` 二次确认：伪造 session 已可被读取
+- 尝试将 hash 切换到 `#/` 与 `#/admin`，期望直接进入登录后页面继续抓图
+
+结果：
+- 用户端仍停留在登录页
+- 管理后台仍停留在登录页
+- 未能进入真实登录后业务页面，因此本轮无法产出“登录后核心页面截图”证据
+
+判断：
+- `DEV_ADMIN_BYPASS_TOKEN` 只解决 API 鉴权绕过，不等价于合法 Supabase JWT
+- 前端路由守卫 / 登录态恢复流程不接受该伪造 token 作为真实登录凭据
+- 在缺少真实测试账号或可用 service role 的前提下，无法完成登录后页面截图回归
+
 ## 本轮结论
 - B8 用户端 UI 一致性检查：通过
 - C8 管理后台 UI 一致性检查：通过
@@ -121,9 +144,10 @@
 ## 剩余风险
 1. 受登录态限制，用户端/后台登录后深层业务页面尚未做完整人工点点点回归
 2. 真实写库、上传、签名 URL、存储联调仍依赖 `SUPABASE_SERVICE_ROLE_KEY`
-3. Vite dev server 在短时重复拉起时出现过一次 `esbuild write EPIPE`，重启后恢复，暂未复现为构建问题
+3. `DEV_ADMIN_BYPASS_TOKEN` 不能替代真实 Supabase 登录态，当前无法仅凭伪造 localStorage session 进入登录后页面
+4. Vite dev server 在短时重复拉起时出现过一次 `esbuild write EPIPE`，重启后恢复，暂未复现为构建问题
 
 ## 建议的下一步
-1. 补充部署说明文档（环境变量、启动端口、反向代理、Supabase 依赖）
-2. 待补齐 `SUPABASE_SERVICE_ROLE_KEY` 后，执行真实数据库/对象存储联调
-3. 如需更强 UI 证明，可在补齐测试账号后补做登录后核心页面截图回归
+1. 优先补齐 `SUPABASE_SERVICE_ROLE_KEY`，完成真实数据库 / 对象存储联调
+2. 补充一组可用测试账号（普通用户 + 管理员），再执行登录后核心页面截图回归
+3. 如短期仍无法补齐凭据，可转向清理根工作区历史单体文档与仓库说明
