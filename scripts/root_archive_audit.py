@@ -13,6 +13,7 @@ EXCLUDED_NAMES = {'.git', '__pycache__', 'node_modules', 'heart-plant', 'heart-p
 MANIFEST = ROOT / 'ROOT_ARCHIVE_MANIFEST.md'
 EXECUTION_STATE = ROOT / 'execution-state.json'
 VERIFICATION_RECORD = ROOT / 'VERIFICATION_RECORD.md'
+EXECUTION_PLAN = ROOT / 'EXECUTION_PLAN.md'
 
 TOP_LEVEL_EXPECTED = {
     '.gitignore',
@@ -462,6 +463,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'workspace status consistency issues',
     'blocking status consistency issues',
     'verification record consistency issues',
+    'execution plan consistency issues',
 )
 
 DOC_TIMESTAMP_REQUIREMENTS = {
@@ -589,6 +591,89 @@ VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS = (
     'origin',
     'RESULT: PASS',
 )
+
+PLAN_TASK_RE = re.compile(r'^- \[([ xX])\]\s+([A-D]\d+)\.\s+(.*)$')
+VERIFICATION_RECORD_EXECUTION_PLAN_HEADING = '### 33. EXECUTION_PLAN 完成状态显式校验'
+VERIFICATION_RECORD_EXECUTION_PLAN_MARKERS = (
+    'EXECUTION_PLAN.md',
+    'execution-state.json',
+    'completed',
+    'A1',
+    'A8',
+    'B8',
+    'C8',
+    'D6',
+    'RESULT: PASS',
+)
+EXECUTION_PLAN_REQUIRED_MARKERS = {
+    'currentStep': ('EXECUTION_PLAN.md', 'completed', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('EXECUTION_PLAN.md', 'completed', 'RESULT: PASS'),
+}
+
+
+def parse_execution_plan_tasks(text: str) -> dict[str, bool]:
+    tasks: dict[str, bool] = {}
+    for line in text.splitlines():
+        match = PLAN_TASK_RE.match(line.strip())
+        if not match:
+            continue
+        checked, task_id, _ = match.groups()
+        tasks[task_id] = checked.lower() == 'x'
+    return tasks
+
+
+def execution_plan_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+    plan_text = EXECUTION_PLAN.read_text(encoding='utf-8', errors='ignore')
+    plan_tasks = parse_execution_plan_tasks(plan_text)
+
+    expected_tasks = [f'{prefix}{idx}' for prefix, end in [('A', 8), ('B', 8), ('C', 8), ('D', 6)] for idx in range(1, end + 1)]
+    for task_id in expected_tasks:
+        if task_id not in plan_tasks:
+            gaps.append(f'EXECUTION_PLAN missing task checkbox :: {task_id}')
+
+    completed = state.get('completed')
+    if not isinstance(completed, list):
+        return gaps + ['execution-state completed missing or invalid']
+    completed_set = {item for item in completed if isinstance(item, str)}
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_EXECUTION_PLAN_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing execution plan section :: '
+            f'{VERIFICATION_RECORD_EXECUTION_PLAN_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_EXECUTION_PLAN_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD execution plan marker missing :: {marker}')
+
+    current_step = state.get('currentStep', '')
+    for marker in EXECUTION_PLAN_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing execution plan marker :: {marker}')
+
+    for marker in EXECUTION_PLAN_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing execution plan marker :: {marker}')
+
+    for task_id in expected_tasks:
+        if task_id not in completed_set and plan_tasks.get(task_id) is True:
+            gaps.append(f'EXECUTION_PLAN task checked but not in execution-state completed :: {task_id}')
+        if task_id in completed_set and plan_tasks.get(task_id) is not True:
+            gaps.append(f'EXECUTION_PLAN task not checked but execution-state completed includes it :: {task_id}')
+        if section_text:
+            marker = f'- {task_id}: done'
+            if task_id in completed_set and marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD execution plan section missing completed marker :: {marker}')
+
+    extra_completed = sorted(completed_set - set(expected_tasks))
+    for task_id in extra_completed:
+        gaps.append(f'execution-state completed contains unexpected task id :: {task_id}')
+
+    return gaps
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -1558,6 +1643,7 @@ def main() -> int:
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
+    execution_plan_issues = execution_plan_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1590,6 +1676,7 @@ def main() -> int:
         'workspace status consistency issues': len(workspace_status_issues),
         'blocking status consistency issues': len(blocking_status_issues),
         'verification record consistency issues': 0,
+        'execution plan consistency issues': len(execution_plan_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -1659,6 +1746,9 @@ def main() -> int:
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
+    if execution_plan_issues:
+        print('\n[execution plan consistency issues]')
+        print('\n'.join(execution_plan_issues))
 
     failed = bool(
         missing_readmes
@@ -1681,6 +1771,7 @@ def main() -> int:
         or workspace_status_issues
         or blocking_status_issues
         or verification_record_issues
+        or execution_plan_issues
     )
     if failed:
         print('\nRESULT: FAIL')

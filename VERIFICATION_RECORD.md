@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:00 (Asia/Shanghai)
+更新时间：2026-03-09 07:13 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:00
+- timestamp: 2026-03-09 07:13
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -596,6 +596,7 @@
 - workspace status consistency issues: 0
 - blocking status consistency issues: 0
 - verification record consistency issues: 0
+- execution plan consistency issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -967,3 +968,73 @@
 结论：
 - 根工作区归档巡检现已覆盖“`blocking.status` 是否仍在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步，并与当前硬阻塞语义保持一致”这一层约束
 - 后续若 cron 只更新阻塞文案、却漏掉 `blocking.status` 或将其改成与阻塞事实不匹配的值，脚本会直接 FAIL，进一步降低阻塞状态机读语义漂移风险
+
+
+### 33. EXECUTION_PLAN 完成状态显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `EXECUTION_PLAN.md` 的复选框状态也纳入显式校验，避免计划面仍停留在旧勾选，而 `execution-state.json -> completed` 已经走到更后面。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会显式解析 `EXECUTION_PLAN.md` 中 `A1-A8`、`B1-B8`、`C1-C8`、`D1-D6` 的复选框状态
+- `execution-state.json -> completed` 必须与 `EXECUTION_PLAN.md` 的勾选结果逐项一致
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `EXECUTION_PLAN.md`、`completed`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，固化计划面与状态源的一致性结果
+- 最近一轮归档审计摘要也已纳入 `execution plan consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `execution plan consistency issues: 3`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 33. EXECUTION_PLAN 完成状态显式校验`
+     - `execution-state.json -> currentStep` 缺少 `completed` 标记
+     - `VERIFICATION_RECORD.md` 正文缺少 `completed` 标记
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `EXECUTION_PLAN.md` 复选框解析与 `execution plan consistency issues` 汇总项
+   - 将 `EXECUTION_PLAN.md` 中 A1-A8 / B1-B8 / C1-C8 / D1-D6 全量复选框与 `execution-state.json -> completed` 对齐
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节并固化本轮 `EXECUTION_PLAN.md` / `completed` 审计结果
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `execution plan consistency issues: 0`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 EXECUTION_PLAN / completed 对照：
+- EXECUTION_PLAN.md: all task checkboxes synchronized with execution-state.json -> completed
+- A1: done
+- A2: done
+- A3: done
+- A4: done
+- A5: done
+- A6: done
+- A7: done
+- A8: done
+- B1: done
+- B2: done
+- B3: done
+- B4: done
+- B5: done
+- B6: done
+- B7: done
+- B8: done
+- C1: done
+- C2: done
+- C3: done
+- C4: done
+- C5: done
+- C6: done
+- C7: done
+- C8: done
+- D1: done
+- D2: done
+- D3: done
+- D4: done
+- D5: done
+- D6: done
+- completed: synchronized with the same checklist coverage
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“`EXECUTION_PLAN.md` 复选框状态是否仍与 `execution-state.json -> completed`、`VERIFICATION_RECORD.md` 显式同步”这一层约束
+- 后续若 cron 只更新状态源、不回写原始执行清单，脚本会直接 FAIL，进一步降低计划面与实际进度漂移风险
