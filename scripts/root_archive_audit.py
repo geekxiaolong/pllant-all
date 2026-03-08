@@ -270,6 +270,28 @@ ARCHIVE_CLASSIFICATION_TARGETS = {
     '.vscode/': {'.vscode/README.md'},
 }
 
+RETAINED_ACTIVITY_PATHS = {
+    '.vscode/settings.json',
+    'scripts/root_archive_audit.py',
+    'scripts/README.md',
+}
+
+RETAINED_ROOT_DOC_TARGETS = {
+    'README.md',
+    'START_HERE.md',
+    'EXECUTION_PLAN.md',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'ROOT_ARCHIVE_MANIFEST.md',
+    'THREE-APP-DEPLOYMENT.md',
+    'THREE-APP-SPLIT-STATUS.md',
+}
+
+RETAINED_TOP_LEVEL_DIRS = {
+    '.vscode',
+    'scripts',
+}
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -428,6 +450,59 @@ def manifest_classification_coverage_gaps() -> list[str]:
             path = ROOT / target
             if not path.exists():
                 gaps.append(f'archive classification target missing on disk :: {manifest_item} -> {target}')
+
+    return gaps
+
+
+def retained_baseline_gaps(manifest_text: str) -> list[str]:
+    gaps: list[str] = []
+    retained = MANIFEST_SECTION_EXPECTED['## 一、当前仍应保留并持续维护的根目录文件']
+
+    top_level_retained = {item for item in retained if '/' not in item or item.startswith('.vscode/')}
+    nested_retained = retained - top_level_retained
+
+    missing_top_level_allowlist = sorted(top_level_retained - TOP_LEVEL_EXPECTED)
+    for item in missing_top_level_allowlist:
+        gaps.append(f'retained baseline not allowed by top-level expected set :: {item}')
+
+    archive_collisions = sorted(top_level_retained & ARCHIVE_TARGETS)
+    for item in archive_collisions:
+        gaps.append(f'retained top-level entry collides with archive audit target :: {item}')
+
+    manifest_missing_root_docs = sorted(RETAINED_ROOT_DOC_TARGETS - top_level_retained)
+    for item in manifest_missing_root_docs:
+        gaps.append(f'retained manifest missing root doc target :: {item}')
+
+    manifest_missing_activity_paths = sorted(RETAINED_ACTIVITY_PATHS - nested_retained)
+    for item in manifest_missing_activity_paths:
+        gaps.append(f'retained manifest missing activity path :: {item}')
+
+    referenced_dirs = {item.split('/', 1)[0] for item in nested_retained}
+    missing_activity_dirs = sorted(RETAINED_TOP_LEVEL_DIRS - referenced_dirs)
+    for item in missing_activity_dirs:
+        gaps.append(f'retained manifest missing activity directory reference :: {item}/')
+
+    for item in sorted(RETAINED_ACTIVITY_PATHS):
+        if not (ROOT / item).exists():
+            gaps.append(f'retained activity path missing on disk :: {item}')
+
+    root_text_targets = {
+        'README.md': ROOT / 'README.md',
+        'START_HERE.md': ROOT / 'START_HERE.md',
+        'ROOT_ARCHIVE_MANIFEST.md': ROOT / 'ROOT_ARCHIVE_MANIFEST.md',
+        'scripts/README.md': ROOT / 'scripts/README.md',
+    }
+    required_mentions = {
+        'README.md': ('ROOT_ARCHIVE_MANIFEST.md', 'execution-state.json', 'VERIFICATION_RECORD.md'),
+        'START_HERE.md': ('ROOT_ARCHIVE_MANIFEST.md', 'execution-state.json', 'VERIFICATION_RECORD.md'),
+        'ROOT_ARCHIVE_MANIFEST.md': ('scripts/root_archive_audit.py', '.vscode/settings.json'),
+        'scripts/README.md': ('ROOT_ARCHIVE_MANIFEST.md',),
+    }
+    for rel, markers in required_mentions.items():
+        text = root_text_targets[rel].read_text(encoding='utf-8', errors='ignore')
+        for marker in markers:
+            if marker not in text:
+                gaps.append(f'retained activity/navigation marker missing :: {rel} -> {marker}')
 
     return gaps
 

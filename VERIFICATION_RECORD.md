@@ -414,3 +414,37 @@
 结论：
 - 根工作区归档巡检现已从“文件存在 / 标识存在 / section 正确”进一步提升到“manifest 分类是否真正覆盖 audit 基线”这一层
 - 后续若新增 archive targets 但忘记接入 manifest 分类映射，脚本会直接报错，减少根工作区归档基线持续漂移的风险
+
+### 17. manifest 保留基线与顶层白名单 / 活动目录说明一致性校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，进一步补强 `scripts/root_archive_audit.py`，让它不仅检查 archive 分类，还检查“当前仍应保留并持续维护”的基线是否与顶层白名单、活动目录说明和主导航文档保持一致。
+
+新增校验项：
+- 对 `## 一、当前仍应保留并持续维护的根目录文件` 建立 retained baseline 约束，检查：
+  - manifest 中保留的顶层条目是否全部属于 `TOP_LEVEL_EXPECTED`
+  - 保留条目是否与 `ARCHIVE_TARGETS` 发生误重叠
+  - `README.md`、`START_HERE.md`、`EXECUTION_PLAN.md`、`execution-state.json`、`VERIFICATION_RECORD.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-DEPLOYMENT.md`、`THREE-APP-SPLIT-STATUS.md` 是否持续留在 retained baseline
+- 对活动目录 / 活动路径建立显式基线：
+  - `scripts/root_archive_audit.py`
+  - `scripts/README.md`
+  - `.vscode/settings.json`
+- 对主文档说明做内容级校验：
+  - `README.md`、`START_HERE.md` 必须继续提到 `ROOT_ARCHIVE_MANIFEST.md`、`execution-state.json`、`VERIFICATION_RECORD.md`
+  - `ROOT_ARCHIVE_MANIFEST.md` 必须继续提到 `scripts/root_archive_audit.py` 与 `.vscode/settings.json`
+  - `scripts/README.md` 必须继续提到 `ROOT_ARCHIVE_MANIFEST.md`
+
+实际回归：
+1. 执行 `python3 scripts/root_archive_audit.py`
+2. 输出结果：
+   - `missing README dirs: 0`
+   - `empty dirs: 0`
+   - `manifest missing entries: 0`
+   - `unexpected top-level entries: 0`
+   - `archive marker gaps: 0`
+   - `navigation marker gaps: 0`
+   - `manifest section issues: 0`
+   - `manifest classification issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已同时覆盖 archive baseline 与 retained baseline 两侧的一致性
+- 后续若有人把活动文件从 retained manifest 中漏掉、误纳入 archive targets、或删掉根文档之间的关键导航关系，脚本都能直接报错
