@@ -1,6 +1,6 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T04:03:00+08:00",
+  "updatedAt": "2026-03-09T04:06:00+08:00",
   "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 分类段落一致性校验；首次执行暴露 section 解析范围过宽导致误报 execution-state.json，修正列表项提取与段落截断逻辑后复跑 RESULT: PASS。",
   "completed": [
     "A1",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "169b1b45350cbcc710a1e4ca1d9f1b9bde8bd5b8"
+    "workspace-root": "2daec71a884db8d6f9bf67a4be1bba25ea84efea"
   },
   "blocking": {
     "status": "partial",
@@ -152,7 +152,8 @@
       "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 分类段落一致性校验；首次执行发现 section 解析范围过宽，将第六节维护约定中的 execution-state.json 误判为 2.3 段落条目，修正逐行列表提取与 Markdown heading 截断逻辑后复跑 RESULT: PASS",
       "已更新 VERIFICATION_RECORD.md 记录本轮 manifest 分类一致性回归与脚本修复过程",
       "已在根工作区提交 chore: validate root archive manifest sections（169b1b4）",
-      "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端"
+      "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端",
+      "已在根工作区提交 docs: record manifest section audit progress（2daec71）"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充归档标识抽检、README/manifest 一致性检查），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
