@@ -464,6 +464,24 @@ DOC_TIMESTAMP_REQUIREMENTS = {
     'THREE-APP-SPLIT-STATUS.md': 'execution-state.json',
 }
 
+STATE_SYNC_MARKERS = (
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'latestAudit',
+    '阻塞项',
+)
+
+VERIFICATION_RECORD_STATE_SYNC_HEADING = '### 25. execution-state / fallback 阻塞同步显式校验'
+VERIFICATION_RECORD_STATE_SYNC_MARKERS = (
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'latestAudit',
+    '阻塞项',
+    'blocking.fallback',
+    'nextSteps',
+    'RESULT: PASS',
+)
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -856,6 +874,50 @@ def verification_record_summary_section_gaps(
     return gaps
 
 
+def state_sync_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    fallback = state.get('blocking', {}).get('fallback', '')
+    if not isinstance(fallback, str) or not fallback.strip():
+        gaps.append('execution-state blocking.fallback missing or empty')
+    else:
+        for marker in STATE_SYNC_MARKERS:
+            if marker not in fallback:
+                gaps.append(f'execution-state blocking.fallback missing marker :: {marker}')
+
+    next_steps = state.get('nextSteps')
+    if not isinstance(next_steps, list) or len(next_steps) < 3:
+        gaps.append('execution-state nextSteps missing fallback continuation entry')
+        fallback_step = ''
+    else:
+        fallback_step = next_steps[2]
+        if not isinstance(fallback_step, str) or not fallback_step.strip():
+            gaps.append('execution-state nextSteps[2] missing or empty')
+            fallback_step = ''
+        else:
+            for marker in STATE_SYNC_MARKERS:
+                if marker not in fallback_step:
+                    gaps.append(f'execution-state nextSteps[2] missing marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_STATE_SYNC_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing state sync section :: '
+            f'{VERIFICATION_RECORD_STATE_SYNC_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_STATE_SYNC_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD state sync marker missing :: {marker}')
+
+    if fallback and fallback_step and fallback != fallback_step:
+        gaps.append('execution-state blocking.fallback and nextSteps[2] mismatch')
+
+    return gaps
+
+
 def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -948,6 +1010,7 @@ def main() -> int:
     except ValueError:
         state_stamp = ''
     doc_timestamp_issues = doc_timestamp_gaps(state_stamp)
+    state_sync_issues = state_sync_gaps()
 
     summary_counts = {
         'top-level entries checked': len(entries),
@@ -966,7 +1029,7 @@ def main() -> int:
         'doc timestamp issues': len(doc_timestamp_issues),
         'verification record consistency issues': 0,
     }
-    verification_record_issues = verification_record_consistency_gaps(summary_counts)
+    verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
 
     print('== Root archive audit ==')

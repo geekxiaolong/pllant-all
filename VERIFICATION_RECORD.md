@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:29 (Asia/Shanghai)
+更新时间：2026-03-09 05:41 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -586,7 +586,7 @@
    - `RESULT: PASS`
 
 最新审计摘要：
-- timestamp: 2026-03-09 05:29
+- timestamp: 2026-03-09 05:41
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -624,7 +624,7 @@
      - `VERIFICATION_RECORD.md` 缺少 `- timestamp: 2026-03-09 05:10`
    - 输出 `RESULT: FAIL`
 2. 修正方式：
-   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:29`
+   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:41`
    - 同步回写 `execution-state.json -> updatedAt`、`currentStep` 与 `latestAudit.timestamp`
 3. 修正后复跑 `python3 scripts/root_archive_audit.py`
    - `verification record consistency issues: 0`
@@ -664,3 +664,33 @@
 结论：
 - 根工作区归档巡检现已覆盖“主导航文档更新时间是否仍与唯一状态源同步”这一层约束
 - 后续若 cron 只更新 `execution-state.json` / `VERIFICATION_RECORD.md`，却漏掉 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的时间戳，脚本会直接 FAIL，进一步降低入口文档陈旧带来的认知漂移风险
+
+### 25. execution-state / fallback 阻塞同步显式校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把阻塞续跑说明本身也纳入跨文件显式基线校验，避免 `blocking.fallback`、`nextSteps` 与 `VERIFICATION_RECORD.md` 各写各的。
+
+新增校验项：
+- `execution-state.json -> blocking.fallback` 必须显式命中 `execution-state.json`、`VERIFICATION_RECORD.md`、`latestAudit`、`阻塞项`
+- `execution-state.json -> nextSteps[2]` 必须保留同样的阻塞续跑标记，并与 `blocking.fallback` 保持一致
+- `VERIFICATION_RECORD.md` 必须新增本节，显式记录 `blocking.fallback` / `nextSteps` / `latestAudit` / `阻塞项` 的同步校验结果
+- 若以上任一处漂移，`python3 scripts/root_archive_audit.py` 将直接报 `verification record consistency issues` 并 `RESULT: FAIL`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `verification record consistency issues: 4`
+   - 具体缺口：
+     - `execution-state.json -> blocking.fallback` 缺少 `latestAudit`
+     - `execution-state.json -> blocking.fallback` 缺少 `阻塞项`
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 25. execution-state / fallback 阻塞同步显式校验`
+     - `execution-state.json -> blocking.fallback` 与 `nextSteps[2]` 文案不一致
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 同步回写 `execution-state.json -> blocking.fallback` 与 `nextSteps[2]`，统一补齐 `execution-state.json`、`VERIFICATION_RECORD.md`、`latestAudit`、`阻塞项` 标记
+   - 在 `VERIFICATION_RECORD.md` 新增本节，显式记录本轮阻塞续跑同步校验
+   - 同步更新 `execution-state.json -> updatedAt`、`currentStep`、`latestAudit` 与主导航文档 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“阻塞续跑说明本身是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
+- 后续若 cron 只更新阻塞文字的一侧、漏掉 `latestAudit` 或 `阻塞项` 标记，脚本会直接 FAIL，进一步降低阻塞记录与续跑策略漂移风险
