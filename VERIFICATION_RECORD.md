@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:58 (Asia/Shanghai)
+更新时间：2026-03-09 07:00 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:58
+- timestamp: 2026-03-09 07:00
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -718,10 +718,10 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: latest local HEAD 143812de5d89dd4512ceecc75112a1f44ff83b81 (see VERIFICATION_RECORD.md recentCommits section)
-- workspace-root recent local heads (pre-sync latest 2): 143812de5d89dd4512ceecc75112a1f44ff83b81, 9d6b8e3223c00b28e9aeb65bac1ba96b2aee319e
-- workspace-root HEAD~1: 143812de5d89dd4512ceecc75112a1f44ff83b81
-- workspace-root HEAD~2: 9d6b8e3223c00b28e9aeb65bac1ba96b2aee319e
+- workspace-root: latest local HEAD 30edb98110435e3042f82a7a68ff7da05896a541 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 30edb98110435e3042f82a7a68ff7da05896a541, 1008dbb0eb535728ddc73d20b488b648fd87427e
+- workspace-root HEAD~1: 30edb98110435e3042f82a7a68ff7da05896a541
+- workspace-root HEAD~2: 1008dbb0eb535728ddc73d20b488b648fd87427e
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -931,7 +931,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 1008dbb0eb535728ddc73d20b488b648fd87427e
+- workspace-root HEAD~1 anchor: 30edb98110435e3042f82a7a68ff7da05896a541
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
