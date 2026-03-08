@@ -460,6 +460,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'root remote consistency issues',
     'blocking snapshot consistency issues',
     'workspace status consistency issues',
+    'blocking status consistency issues',
     'verification record consistency issues',
 )
 
@@ -571,6 +572,21 @@ VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
     'git status --short',
     '?? EXECUTION_PLAN.md',
     'clean tracked files',
+    'RESULT: PASS',
+)
+
+BLOCKING_STATUS_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.status', 'partial', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.status', 'partial', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_BLOCKING_STATUS_HEADING = '### 32. blocking.status 显式校验'
+VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS = (
+    'blocking.status',
+    'partial',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    '测试账号',
+    'origin',
     'RESULT: PASS',
 )
 
@@ -1410,6 +1426,48 @@ def workspace_status_consistency_gaps() -> list[str]:
     return gaps
 
 
+
+def blocking_status_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    blocking = state.get('blocking', {})
+    status = blocking.get('status')
+    point = blocking.get('point', '')
+    if status != 'partial':
+        gaps.append(f'execution-state blocking.status invalid :: {status}')
+
+    current_step = state.get('currentStep', '')
+    for marker in BLOCKING_STATUS_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing blocking.status marker :: {marker}')
+
+    for marker in BLOCKING_STATUS_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing blocking.status marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_STATUS_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing blocking status section :: '
+            f'{VERIFICATION_RECORD_BLOCKING_STATUS_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD blocking status marker missing :: {marker}')
+        status_marker = f'- blocking.status: {status}'
+        if status_marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking status marker missing :: {status_marker}')
+
+    for marker in ('SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin'):
+        if marker not in point:
+            gaps.append(f'execution-state blocking.point missing blocker for blocking.status context :: {marker}')
+
+    return gaps
+
+
 def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1499,6 +1557,7 @@ def main() -> int:
     root_remote_issues = root_remote_consistency_gaps()
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
+    blocking_status_issues = blocking_status_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1529,6 +1588,7 @@ def main() -> int:
         'root remote consistency issues': len(root_remote_issues),
         'blocking snapshot consistency issues': len(blocking_snapshot_issues),
         'workspace status consistency issues': len(workspace_status_issues),
+        'blocking status consistency issues': len(blocking_status_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
@@ -1593,6 +1653,9 @@ def main() -> int:
     if workspace_status_issues:
         print('\n[workspace status consistency issues]')
         print('\n'.join(workspace_status_issues))
+    if blocking_status_issues:
+        print('\n[blocking status consistency issues]')
+        print('\n'.join(blocking_status_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1616,6 +1679,7 @@ def main() -> int:
         or root_remote_issues
         or blocking_snapshot_issues
         or workspace_status_issues
+        or blocking_status_issues
         or verification_record_issues
     )
     if failed:

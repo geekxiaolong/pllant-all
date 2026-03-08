@@ -594,6 +594,7 @@
 - root remote consistency issues: 0
 - blocking snapshot consistency issues: 0
 - workspace status consistency issues: 0
+- blocking status consistency issues: 0
 - verification record consistency issues: 0
 
 结论：
@@ -719,9 +720,9 @@
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - workspace-root: latest local HEAD 30edb98110435e3042f82a7a68ff7da05896a541 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 30edb98110435e3042f82a7a68ff7da05896a541, 1008dbb0eb535728ddc73d20b488b648fd87427e
-- workspace-root HEAD~1: 30edb98110435e3042f82a7a68ff7da05896a541
-- workspace-root HEAD~2: 1008dbb0eb535728ddc73d20b488b648fd87427e
+- workspace-root recent local heads (pre-sync latest 2): 8ecc5e0a4306298f513b52c8131fb503196322a3, 30edb98110435e3042f82a7a68ff7da05896a541
+- workspace-root HEAD~1: 8ecc5e0a4306298f513b52c8131fb503196322a3
+- workspace-root HEAD~2: 30edb98110435e3042f82a7a68ff7da05896a541
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -809,6 +810,7 @@
 - 本轮已为 scripts/root_archive_audit.py 新增 git status --short / ?? EXECUTION_PLAN.md / clean tracked files 的根工作区显式校验；已执行 python3 scripts/root_archive_audit.py 复跑确认 workspace status consistency issues: 0，RESULT: PASS
 - 本轮已为 scripts/root_archive_audit.py 新增 workspace-root recentCommits pre-sync 提交窗口校验，要求 execution-state.json -> recentCommits.workspace-root 对齐 HEAD~1，且 VERIFICATION_RECORD.md 第 26 节显式记录 workspace-root recent local heads (pre-sync latest 2)；首次执行命中 recent commit consistency issues: 2 与 workspace status consistency issues: 1，修正后复跑 RESULT: PASS
 - 本轮已为 scripts/root_archive_audit.py 新增 git log -3 --format=%H / HEAD~1 / HEAD~2 的根仓库提交窗口显式校验；要求 VERIFICATION_RECORD.md 第 26 节与 execution-state.json -> currentStep 同步落盘精确 pre-sync 提交链，修正后复跑确认 recent commit consistency issues: 0，RESULT: PASS
+- 本轮已为 scripts/root_archive_audit.py 新增 blocking.status=partial 的跨文件显式校验，要求 execution-state.json / VERIFICATION_RECORD.md / latestAudit 同步落盘 blocking.status、partial 与阻塞语义；复跑 python3 scripts/root_archive_audit.py 确认 blocking status consistency issues: 0，RESULT: PASS
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
@@ -931,7 +933,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 30edb98110435e3042f82a7a68ff7da05896a541
+- workspace-root HEAD~1 anchor: 8ecc5e0a4306298f513b52c8131fb503196322a3
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -939,3 +941,29 @@
 - 根工作区归档巡检现已覆盖“`git rev-parse HEAD` 的显式可见性 + `workspace-root current HEAD` 语义说明 + `HEAD~1` 机读锚点”这一层约束
 - 后续若 cron 漏写 `git rev-parse HEAD` / `workspace-root current HEAD` 标记，或把 `recentCommits.workspace-root` 从 `HEAD~1` 锚点漂移出去，脚本会直接 FAIL，同时避免引入‘当前提交哈希写进当前提交’这一不可满足约束
 
+
+### 32. blocking.status 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `blocking.status` 也纳入跨文件显式校验，避免阻塞语义只体现在 `blocking.point` 文案里，而没有稳定机读锚点。
+
+新增校验项：
+- `execution-state.json -> blocking.status` 必须保持为 `partial`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `blocking.status`、`partial`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并显式落盘当前 `blocking.status` 与对应阻塞语义
+- 审计脚本会继续要求 `blocking.point` 同时命中 `SUPABASE_SERVICE_ROLE_KEY`、`测试账号`、`origin`，从而保证 `partial` 不是空标签，而是与当前硬阻塞快照绑定
+- 最近一轮归档审计摘要也已纳入 `blocking status consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 完成 `scripts/root_archive_audit.py` 补强后执行 `python3 scripts/root_archive_audit.py`
+2. 输出结果新增：
+   - `blocking status consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 blocking.status 快照：
+- blocking.status: partial
+- blocking status semantics: partial = 根工作区巡检脚本化续跑仍可继续推进，但真实写库/上传/登录后页面回归仍受 `SUPABASE_SERVICE_ROLE_KEY`、测试账号 / Supabase 登录态、根仓库缺少 `origin` 约束
+- blocking.point markers: SUPABASE_SERVICE_ROLE_KEY / 测试账号 / origin
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“`blocking.status` 是否仍在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步，并与当前硬阻塞语义保持一致”这一层约束
+- 后续若 cron 只更新阻塞文案、却漏掉 `blocking.status` 或将其改成与阻塞事实不匹配的值，脚本会直接 FAIL，进一步降低阻塞状态机读语义漂移风险
