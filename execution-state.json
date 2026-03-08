@@ -1,6 +1,6 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T01:36:00+08:00",
+  "updatedAt": "2026-03-09T01:38:00+08:00",
   "currentStep": "已继续清理根工作区剩余单体入口：完成 DESIGN.md 历史归档说明、将 deploy/git/upload 相关根目录脚本及 package.json 改为归档提示并验证不再误跑旧单体流程；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归",
   "completed": [
     "A1",
@@ -37,7 +37,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "8aca9d423a396c3d4d3644317662ceb240949e6b"
+    "workspace-root": "344b82f5b8f213b1a8fc1c7a0e7fdc77ad537892"
   },
   "blocking": {
     "status": "partial",
@@ -82,7 +82,9 @@
       "本轮已将根目录 package.json 的 dev/build 改为归档保护提示，避免误启动旧单体 Vite",
       "已执行 sed/head + grep 校验归档标识命中",
       "已执行 npm run dev，确认根目录仅输出 Archived root workspace 提示并中止",
-      "已执行 bash ./deploy.sh，确认根目录仅输出 Archived root script 提示，不再进入旧部署流程"
+      "已执行 bash ./deploy.sh，确认根目录仅输出 Archived root script 提示，不再进入旧部署流程",
+      "已在根工作区提交 docs: archive remaining root entrypoints（344b82f）",
+      "再次尝试 git push origin HEAD 失败，确认根工作区仍未配置可用 origin"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
