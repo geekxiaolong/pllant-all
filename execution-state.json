@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T07:30:00+08:00",
-  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] / blocking.fallback 的 fallback route 续跑，已补强 scripts/root_archive_audit.py，新增 currentStep / fallback route 显式校验；要求 execution-state.json -> currentStep 显式命中 blocking.fallback、nextSteps[2]、fallback route、execution-state.json、VERIFICATION_RECORD.md、latestAudit，并与 VERIFICATION_RECORD.md 第 22/26/27/28/29/31/32/33/34/35 节同步落盘 latestAudit、recentCommits、git rev-parse HEAD、git log -3 --format=%H、workspace-root current HEAD、workspace-root HEAD~1、workspace-root HEAD~2、git remote -v、git remote get-url origin、No such remote、origin、blocking.point、blocking.tried、blocking.status、partial、nextSteps、EXECUTION_PLAN.md、completed、count=30、no duplicates、canonical order、git status --short、?? EXECUTION_PLAN.md、clean tracked files、blocking.fallback、fallback route，与精确 pre-sync 提交链；当前根仓库 pre-sync 锚点为 HEAD~1=7dcac9089c5807f801809afcc75477bcfc84f9d2、HEAD~2=2b3a8d7980a3cbe89e56bdd16217d1cce3776e81，已确认 execution-state.json -> blocking.fallback 与 nextSteps[2] 保持完全一致，且复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0，RESULT: PASS。",
+  "updatedAt": "2026-03-09T07:32:00+08:00",
+  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] / blocking.fallback 的 fallback route 续跑，已补强 scripts/root_archive_audit.py，新增 currentStep / fallback route 显式校验；要求 execution-state.json -> currentStep 显式命中 blocking.fallback、nextSteps[2]、fallback route、execution-state.json、VERIFICATION_RECORD.md、latestAudit，并与 VERIFICATION_RECORD.md 第 22/26/27/28/29/31/32/33/34/35 节同步落盘 latestAudit、recentCommits、git rev-parse HEAD、git log -3 --format=%H、workspace-root current HEAD、workspace-root HEAD~1、workspace-root HEAD~2、git remote -v、git remote get-url origin、No such remote、origin、blocking.point、blocking.tried、blocking.status、partial、nextSteps、EXECUTION_PLAN.md、completed、count=30、no duplicates、canonical order、git status --short、?? EXECUTION_PLAN.md、clean tracked files、blocking.fallback、fallback route，与精确 pre-sync 提交链；当前根仓库 pre-sync 锚点为 HEAD~1=36870e759fe32763c412df87f2ad29ec21a11479、HEAD~2=7dcac9089c5807f801809afcc75477bcfc84f9d2，已确认 execution-state.json -> blocking.fallback 与 nextSteps[2] 保持完全一致，并复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0，RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4",
     "heart-plant-admin": "2231faa33581aa68bbbb5ce10c46c4f50e5eda89",
     "heart-plant-api": "0daddeeeb5243951f52591c9968720b88347be83",
-    "workspace-root": "latest local HEAD 7dcac9089c5807f801809afcc75477bcfc84f9d2 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)"
+    "workspace-root": "latest local HEAD 36870e759fe32763c412df87f2ad29ec21a11479 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)"
   },
   "blocking": {
     "status": "partial",
@@ -167,7 +167,8 @@
       "本轮已为 scripts/root_archive_audit.py 新增 workspace-root recentCommits pre-sync 提交窗口校验，要求 execution-state.json -> recentCommits.workspace-root 对齐 HEAD~1，且 VERIFICATION_RECORD.md 第 26 节显式记录 workspace-root recent local heads (pre-sync latest 2)；首次执行命中 recent commit consistency issues: 2 与 workspace status consistency issues: 1，修正后复跑 RESULT: PASS",
       "本轮已为 scripts/root_archive_audit.py 新增 git log -3 --format=%H / HEAD~1 / HEAD~2 的根仓库提交窗口显式校验；要求 VERIFICATION_RECORD.md 第 26 节与 execution-state.json -> currentStep 同步落盘精确 pre-sync 提交链，修正后复跑确认 recent commit consistency issues: 0，RESULT: PASS",
       "本轮已为 scripts/root_archive_audit.py 新增 blocking.status=partial 的跨文件显式校验，要求 execution-state.json / VERIFICATION_RECORD.md / latestAudit 同步落盘 blocking.status、partial 与阻塞语义；复跑 python3 scripts/root_archive_audit.py 确认 blocking status consistency issues: 0，RESULT: PASS",
-      "本轮已为 scripts/root_archive_audit.py 新增 currentStep / fallback route 显式校验，要求 execution-state.json -> currentStep、blocking.fallback、nextSteps[2] 与 VERIFICATION_RECORD.md 第 35 节同步落盘 fallback route 语义；提交后复跑 python3 scripts/root_archive_audit.py 确认 fallback route consistency issues: 0，RESULT: PASS"
+      "本轮已为 scripts/root_archive_audit.py 新增 currentStep / fallback route 显式校验，要求 execution-state.json -> currentStep、blocking.fallback、nextSteps[2] 与 VERIFICATION_RECORD.md 第 35 节同步落盘 fallback route 语义；提交后复跑 python3 scripts/root_archive_audit.py 确认 fallback route consistency issues: 0，RESULT: PASS",
+      "本轮已同步修正 VERIFICATION_RECORD.md 第 22/26/28/31/35 节的 pre-sync 提交链、blocking.tried 最近项与 fallback route 摘要时间戳；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、fallback route consistency issues: 0，RESULT: PASS"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
@@ -177,7 +178,7 @@
     "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   ],
   "latestAudit": {
-    "timestamp": "2026-03-09T07:30:00+08:00",
+    "timestamp": "2026-03-09T07:32:00+08:00",
     "command": "python3 scripts/root_archive_audit.py",
     "result": "PASS",
     "summary": {
