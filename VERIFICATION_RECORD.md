@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:41 (Asia/Shanghai)
+更新时间：2026-03-09 05:57 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -571,22 +571,8 @@
 - `VERIFICATION_RECORD.md` 必须新增本节，逐项落盘最近一轮审计统计摘要，供脚本逐行比对
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
-实际回归：
-1. 首次执行 `python3 scripts/root_archive_audit.py`
-   - 命中 `verification record consistency issues: 2`
-   - 具体缺口：
-     - `execution-state.json` 缺少 `latestAudit.timestamp`
-     - `VERIFICATION_RECORD.md` 缺少“最近一轮归档审计摘要（机读对照）”段落
-   - 输出 `RESULT: FAIL`
-2. 修正方式：
-   - 为 `execution-state.json` 新增 `latestAudit` 结构，落盘最近一轮审计命令、结果与统计摘要
-   - 为 `VERIFICATION_RECORD.md` 新增本节，固化最近一轮审计统计项
-3. 修正后复跑 `python3 scripts/root_archive_audit.py`
-   - `verification record consistency issues: 0`
-   - `RESULT: PASS`
-
 最新审计摘要：
-- timestamp: 2026-03-09 05:41
+- timestamp: 2026-03-09 05:57
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -603,6 +589,7 @@
 - doc reference issues: 0
 - blocker consistency issues: 0
 - doc timestamp issues: 0
+- recent commit consistency issues: 0
 - verification record consistency issues: 0
 
 结论：
@@ -694,3 +681,42 @@
 结论：
 - 根工作区归档巡检现已覆盖“阻塞续跑说明本身是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
 - 后续若 cron 只更新阻塞文字的一侧、漏掉 `latestAudit` 或 `阻塞项` 标记，脚本会直接 FAIL，进一步降低阻塞记录与续跑策略漂移风险
+
+### 26. recentCommits 与仓库 HEAD 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `recentCommits` 也纳入跨仓库机读校验，避免状态文件里的提交指针与三端/根仓库真实 HEAD 漂移。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会对 `heart-plant`、`heart-plant-admin`、`heart-plant-api`、`workspace-root` 执行 `git rev-parse HEAD`
+- `execution-state.json -> recentCommits` 对三端子仓库必须与实际 HEAD 显式同步；`workspace-root` 必须显式标注 `latest local HEAD`，并以本节落盘的实际 HEAD 为准
+- `VERIFICATION_RECORD.md` 必须新增本节，逐项记录 recentCommits / git rev-parse HEAD 校验结果
+- `execution-state.json -> currentStep` 与本节都必须显式命中 `recentCommits`、`git rev-parse HEAD`、`RESULT: PASS`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `recent commit consistency issues: 9`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 26. recentCommits 与仓库 HEAD 显式校验`
+     - `execution-state.json -> currentStep` 缺少 `recentCommits` / `git rev-parse HEAD` 标记
+     - `VERIFICATION_RECORD.md` 正文缺少 `recentCommits` / `git rev-parse HEAD` 标记
+     - `execution-state.json -> recentCommits` 中 `heart-plant`、`heart-plant-admin`、`heart-plant-api` 与实际 HEAD 不一致，且 `workspace-root` 缺少 `latest local HEAD` 描述标记
+   - 同时 `latestAudit.summary` 尚未纳入该新统计项，额外命中 `verification record consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 同步回写 `execution-state.json -> recentCommits`：三端子仓库更新为当前实际 HEAD，`workspace-root` 改为 `latest local HEAD` 描述值
+   - 在 `VERIFICATION_RECORD.md` 新增本节，固化 `recentCommits` / `git rev-parse HEAD` 校验记录
+   - 同步更新 `execution-state.json -> updatedAt`、`currentStep`、`latestAudit.summary` 与主导航文档 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `recent commit consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 recentCommits / git rev-parse HEAD 对照：
+- heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
+- heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
+- heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
+- workspace-root: 0aefcaeae65f7ad872ddc2ba74f01b94644f4323
+
+结论：
+- 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
+- 后续若 cron 只更新文字进度、漏同步 recentCommits 或误填提交指针，脚本会直接 FAIL，进一步降低跨仓库状态记录漂移风险
+

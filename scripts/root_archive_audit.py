@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -454,6 +455,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'doc reference issues',
     'blocker consistency issues',
     'doc timestamp issues',
+    'recent commit consistency issues',
     'verification record consistency issues',
 )
 
@@ -479,6 +481,29 @@ VERIFICATION_RECORD_STATE_SYNC_MARKERS = (
     '阻塞项',
     'blocking.fallback',
     'nextSteps',
+    'RESULT: PASS',
+)
+
+RECENT_COMMIT_REPOS = {
+    'heart-plant': ROOT / 'heart-plant',
+    'heart-plant-admin': ROOT / 'heart-plant-admin',
+    'heart-plant-api': ROOT / 'heart-plant-api',
+    'workspace-root': ROOT,
+}
+
+RECENT_COMMIT_REQUIRED_MARKERS = {
+    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_RECENT_COMMITS_HEADING = '### 26. recentCommits 与仓库 HEAD 显式校验'
+VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
+    'recentCommits',
+    'git rev-parse HEAD',
+    'heart-plant',
+    'heart-plant-admin',
+    'heart-plant-api',
+    'workspace-root',
     'RESULT: PASS',
 )
 
@@ -918,6 +943,84 @@ def state_sync_gaps() -> list[str]:
     return gaps
 
 
+def git_head(path: Path) -> str:
+    result = subprocess.run(
+        ['git', 'rev-parse', 'HEAD'],
+        cwd=path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip() or 'unknown git error'
+        raise RuntimeError(stderr)
+    return result.stdout.strip()
+
+
+def recent_commit_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    recent_commits = state.get('recentCommits')
+    if not isinstance(recent_commits, dict):
+        return ['execution-state recentCommits missing or invalid']
+
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_RECENT_COMMITS_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing recent commit section :: '
+            f'{VERIFICATION_RECORD_RECENT_COMMITS_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_RECENT_COMMITS_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {marker}')
+
+    current_step = state.get('currentStep', '')
+    for marker in RECENT_COMMIT_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing recent commit marker :: {marker}')
+
+    for marker in RECENT_COMMIT_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing recent commit marker :: {marker}')
+
+    for repo_name, repo_path in sorted(RECENT_COMMIT_REPOS.items()):
+        if repo_name not in recent_commits:
+            gaps.append(f'execution-state recentCommits missing repo :: {repo_name}')
+            continue
+        recorded = recent_commits[repo_name]
+        if not isinstance(recorded, str) or not recorded.strip():
+            gaps.append(f'execution-state recentCommits invalid value :: {repo_name}')
+            continue
+        try:
+            actual = git_head(repo_path)
+        except RuntimeError as exc:
+            gaps.append(f'git head lookup failed :: {repo_name} -> {exc}')
+            continue
+        if repo_name == 'workspace-root':
+            if 'latest local HEAD' not in recorded:
+                gaps.append(
+                    'execution-state recentCommits workspace-root marker missing :: '
+                    f'recorded={recorded}'
+                )
+        elif not actual.startswith(recorded):
+            gaps.append(
+                'execution-state recentCommits mismatch :: '
+                f'{repo_name} recorded={recorded} actual={actual}'
+            )
+        if section_text:
+            if repo_name == 'workspace-root':
+                if '- workspace-root:' not in section_text:
+                    gaps.append('VERIFICATION_RECORD recent commit marker missing :: - workspace-root:')
+            else:
+                expected_marker = f'- {repo_name}: {actual}'
+                if expected_marker not in section_text:
+                    gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {expected_marker}')
+
+    return gaps
+
+
 def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1002,6 +1105,7 @@ def main() -> int:
     retained_issues = retained_baseline_gaps(manifest_text)
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
+    recent_commit_issues = recent_commit_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1027,6 +1131,7 @@ def main() -> int:
         'doc reference issues': len(doc_reference_issues),
         'blocker consistency issues': len(blocker_consistency_issues),
         'doc timestamp issues': len(doc_timestamp_issues),
+        'recent commit consistency issues': len(recent_commit_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
@@ -1076,6 +1181,9 @@ def main() -> int:
     if doc_timestamp_issues:
         print('\n[doc timestamp issues]')
         print('\n'.join(doc_timestamp_issues))
+    if recent_commit_issues:
+        print('\n[recent commit consistency issues]')
+        print('\n'.join(recent_commit_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1094,6 +1202,7 @@ def main() -> int:
         or doc_reference_issues
         or blocker_consistency_issues
         or doc_timestamp_issues
+        or recent_commit_issues
         or verification_record_issues
     )
     if failed:
