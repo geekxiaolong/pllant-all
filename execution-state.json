@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T02:31:50+08:00",
-  "currentStep": "已继续清理根工作区剩余历史单体残留：本轮为 LICENSE/、supabase/、nginx/ 三个历史目录补齐 README 级归档说明，明确根工作区不再作为许可证发布、Supabase 原型或 Nginx 部署入口，并完成 grep 校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
+  "updatedAt": "2026-03-09T02:39:00+08:00",
+  "currentStep": "本轮已新增根仓库 .gitignore 忽略子仓库/node_modules/.vscode，并将根目录 package-lock.json 重建为与归档版 package.json 一致的最小锁文件，消除旧单体依赖残留与 git status 噪音。",
   "completed": [
     "A1",
     "A2",
@@ -125,7 +125,10 @@
       "本轮已将 src/app/components、src/app/context、src/app/pages、src/app/utils 及 utils/supabase/info.tsx 共 108 个根工作区历史单体源码文件统一改为 Archived root workspace 守卫，并通过脚本校验全部命中归档标识",
       "已在根工作区提交 docs: archive remaining root app modules（3d1b38b），随后再次尝试 git push origin HEAD，仍因未配置可用 origin 失败",
       "本轮已为 LICENSE/、supabase/、nginx/ 三个历史目录新增 README 级归档说明，补齐目录层面的三端分离导航提示",
-      "已执行 grep -R 校验，确认三个目录 README 均明确标注历史归档与当前子仓库入口"
+      "已执行 grep -R 校验，确认三个目录 README 均明确标注历史归档与当前子仓库入口",
+      "本轮已新增根仓库 .gitignore，忽略 heart-plant、heart-plant-admin、heart-plant-api、node_modules 与 .vscode，避免根仓库继续把三端子仓库和旧依赖目录识别为待提交噪音",
+      "已执行 npm install --package-lock-only --ignore-scripts，将根目录 package-lock.json 重建为仅包含 heartplant-root-archive-workspace 最小归档锁文件",
+      "已执行 git status --short 与 package-lock.json 内容校验，确认根仓库当前仅剩 .gitignore、package-lock.json 与未跟踪的 EXECUTION_PLAN.md 为本层变更"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },

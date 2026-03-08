@@ -1,0 +1,12 @@
+# Archived root workspace ignore rules
+# The active applications live in their own repositories.
+
+.vscode/
+node_modules/
+
+heart-plant/
+heart-plant-admin/
+heart-plant-api/
+
+.DS_Store
+*.log
