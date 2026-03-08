@@ -1,7 +1,5 @@
-// Historical archive notice: this root workspace Supabase metadata file is preserved only
-// for reference from the retired monolith root. Active environment/config ownership now
-// lives in the split repositories (`heart-plant/`, `heart-plant-admin/`, `heart-plant-api/`).
-// Do not import this file as the current source of truth.
-
-export const projectId = "dkszigraljeptpeiimzg";
-export const publicAnonKey = "ARCHIVED_ROOT_REFERENCE_ONLY";
+export default function ArchivedRootModule() {
+  throw new Error(
+    "[Archived root workspace] This module belongs to the retired HeartPlant root monolith. Use heart-plant/, heart-plant-admin/, or heart-plant-api/ instead. See README.md and THREE-APP-DEPLOYMENT.md.",
+  );
+}
