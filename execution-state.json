@@ -1,0 +1,70 @@
+{
+  "project": "heart-plant three-way split",
+  "updatedAt": "2026-03-09T00:34:00+08:00",
+  "currentStep": "D6. 补充部署说明",
+  "completed": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "C7",
+    "C8",
+    "D1",
+    "D2",
+    "D4",
+    "D5"
+  ],
+  "recentCommits": {
+    "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
+    "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
+    "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646"
+  },
+  "blocking": {
+    "status": "partial",
+    "point": "真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；但 API 本地监听、前端构建与 UI 一致性检查已完成",
+    "tried": [
+      "补充本地默认 SUPABASE_URL / anon key 回落，避免无环境变量时服务启动失败",
+      "使用 DEV_ADMIN_BYPASS_TOKEN 验证 /admin/users 与 /admin/plants 路由可达性",
+      "验证 /health 返回正常",
+      "观察到 mock 初始化写入 kv_store_4b732228 时触发 RLS",
+      "已将 library / plants / moods-journals / moments 从 index.tsx 拆分到 routes 目录，并完成 deno check 与本地 HTTP 回归",
+      "已继续将 invite / notification / stats / timeline / upload 拆分到 routes 目录",
+      "已新增 /admin/journals、/admin/moments、/admin/stats/overview 并完成本地 HTTP 回归",
+      "已验证 /health、/make-server-4b732228/health、/admin/*、/make-server-4b732228/admin/stats/overview 返回正常",
+      "已提交并推送 heart-plant-api：0daddee92a344d37bd7a8fe29159dd725669d646",
+      "已为 heart-plant / heart-plant-admin 抽出 apiUrl + buildApiHeaders 公共调用封装，并替换源码中的硬编码 functions URL",
+      "已完成两端 npm run build 回归",
+      "已完成两端 npm run dev 本地启动回归",
+      "已提交并推送 heart-plant：cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
+      "已提交并推送 heart-plant-admin：2231faab1f32cc67c422ea54609a62f93d9af917",
+      "已完成用户端登录页浏览器快照检查，页面文案/布局正常",
+      "已完成管理后台登录页浏览器快照检查，页面文案/布局正常",
+      "已完成拆分后页面/组件/样式与原单体同名文件 diff 校验，差异主要集中在 API URL 与请求头封装替换",
+      "已新增 VERIFICATION_RECORD.md 记录本轮 UI 一致性与运行验证结果"
+    ],
+    "fallback": "继续推进 D6 部署说明；待补充 SUPABASE_SERVICE_ROLE_KEY 后再做真实写库/存储联调与登录后深层业务回归"
+  },
+  "nextSteps": [
+    "补充部署说明",
+    "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
+    "补充登录后核心页面截图回归"
+  ]
+}
