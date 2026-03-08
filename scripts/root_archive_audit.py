@@ -1019,6 +1019,20 @@ def git_head(path: Path) -> str:
     return result.stdout.strip()
 
 
+def git_recent_heads(path: Path, limit: int = 2) -> list[str]:
+    result = subprocess.run(
+        ['git', 'log', f'-{limit}', '--format=%H'],
+        cwd=path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip() or 'unknown git error'
+        raise RuntimeError(stderr)
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
 def root_remote_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1201,6 +1215,29 @@ def recent_commit_consistency_gaps() -> list[str]:
                     'execution-state recentCommits workspace-root marker missing :: '
                     f'recorded={recorded}'
                 )
+            head_match = re.search(r'([0-9a-f]{40})', recorded)
+            if not head_match:
+                gaps.append(
+                    'execution-state recentCommits workspace-root hash missing :: '
+                    f'recorded={recorded}'
+                )
+            else:
+                recorded_head = head_match.group(1)
+                try:
+                    recent_heads = git_recent_heads(repo_path, limit=3)
+                except RuntimeError as exc:
+                    gaps.append(f'git recent head lookup failed :: {repo_name} -> {exc}')
+                else:
+                    if len(recent_heads) < 2:
+                        gaps.append(
+                            'git recent head lookup returned too few commits :: '
+                            f'{repo_name} recent={recent_heads}'
+                        )
+                    elif recorded_head != recent_heads[1]:
+                        gaps.append(
+                            'execution-state recentCommits workspace-root must match HEAD~1 :: '
+                            f'recorded={recorded_head} expected={recent_heads[1]} recent={recent_heads}'
+                        )
         elif not actual.startswith(recorded):
             gaps.append(
                 'execution-state recentCommits mismatch :: '
@@ -1210,6 +1247,31 @@ def recent_commit_consistency_gaps() -> list[str]:
             if repo_name == 'workspace-root':
                 if '- workspace-root:' not in section_text:
                     gaps.append('VERIFICATION_RECORD recent commit marker missing :: - workspace-root:')
+                window_match = re.search(r'- workspace-root recent local heads \(pre-sync latest 2\): ([0-9a-f]{40}), ([0-9a-f]{40})', section_text)
+                if not window_match:
+                    gaps.append(
+                        'VERIFICATION_RECORD recent commit marker missing :: '
+                        '- workspace-root recent local heads (pre-sync latest 2): <head1>, <head2>'
+                    )
+                else:
+                    recorded_window = [window_match.group(1), window_match.group(2)]
+                    try:
+                        recent_heads = git_recent_heads(repo_path, limit=3)
+                    except RuntimeError as exc:
+                        gaps.append(f'git recent head lookup failed :: {repo_name} -> {exc}')
+                    else:
+                        if len(recent_heads) < 3:
+                            gaps.append(
+                                'git recent head lookup returned too few commits :: '
+                                f'{repo_name} recent={recent_heads}'
+                            )
+                        else:
+                            expected_window = recent_heads[1:3]
+                            if recorded_window != expected_window:
+                                gaps.append(
+                                    'VERIFICATION_RECORD workspace-root recent head window mismatch :: '
+                                    f'recorded={recorded_window} expected={expected_window} recent={recent_heads}'
+                                )
             else:
                 expected_marker = f'- {repo_name}: {actual}'
                 if expected_marker not in section_text:
