@@ -25,11 +25,13 @@
 - `EXECUTION_PLAN.md`：原始执行清单（计划面）
 - `execution-state.json`：**唯一持续更新的执行状态源**
 - `VERIFICATION_RECORD.md`：构建、运行、UI、回归验证记录
+- `ROOT_ARCHIVE_MANIFEST.md`：根工作区残余资产总表，也是后续归档巡检的基准清单
 - `THREE-APP-DEPLOYMENT.md`：三端分离后的部署说明
 - `THREE-APP-SPLIT-STATUS.md`：历史状态摘要（只作归档索引）
 - `.gitignore`：根工作区忽略规则，避免误把三端子仓库再次纳入根仓库提交
 - `package-lock.json`：根工作区最小归档锁文件，避免误保留旧单体依赖树
 - `.vscode/settings.json`：仅用于将根目录显示为“历史归档工作区”，降低误操作风险
+- `scripts/root_archive_audit.py`：根工作区归档巡检脚本，可重复校验顶层残余资产、目录 README 覆盖和空目录状态
 
 ## 二、当前仍保留但仅作为历史资料参考的文件
 
