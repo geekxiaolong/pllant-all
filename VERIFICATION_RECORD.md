@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:13 (Asia/Shanghai)
+更新时间：2026-03-09 07:15 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:13
+- timestamp: 2026-03-09 07:15
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -720,10 +720,10 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: latest local HEAD 30edb98110435e3042f82a7a68ff7da05896a541 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 8ecc5e0a4306298f513b52c8131fb503196322a3, 30edb98110435e3042f82a7a68ff7da05896a541
-- workspace-root HEAD~1: 8ecc5e0a4306298f513b52c8131fb503196322a3
-- workspace-root HEAD~2: 30edb98110435e3042f82a7a68ff7da05896a541
+- workspace-root: latest local HEAD 502b4eafca214420c7b14275085dcd219110d6e6 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 502b4eafca214420c7b14275085dcd219110d6e6, b1b8ba2755906fb77679a1d5c616f12c1958bb5f
+- workspace-root HEAD~1: 502b4eafca214420c7b14275085dcd219110d6e6
+- workspace-root HEAD~2: b1b8ba2755906fb77679a1d5c616f12c1958bb5f
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -934,7 +934,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 8ecc5e0a4306298f513b52c8131fb503196322a3
+- workspace-root HEAD~1 anchor: 502b4eafca214420c7b14275085dcd219110d6e6
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
