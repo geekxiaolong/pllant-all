@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
   "updatedAt": "2026-03-09T01:39:00+08:00",
-  "currentStep": "已继续清理根工作区剩余旧单体部署/流媒体入口：完成 docker-compose.yml、workflows/deploy.yml、stream-server/README.md 归档改写并验证；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归，如仍缺凭据则继续清理根目录其余历史单体文件",
+  "currentStep": "已继续清理根工作区剩余旧单体/流媒体入口：完成 docker-compose.yml、workflows/deploy.yml、stream-server/README.md 以及 mediamtx 配置/启动脚本归档改写并验证；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归，如仍缺凭据则继续清理根目录其余历史单体文件",
   "completed": [
     "A1",
     "A2",
@@ -37,7 +37,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "37493951faf123e2c16927796b292ee086e1e51c"
+    "workspace-root": "c3ee433f6d9772a65a7076d93126737624e39925"
   },
   "blocking": {
     "status": "partial",
@@ -90,7 +90,11 @@
       "本轮已将 stream-server/README.md 改为历史归档说明并指回三端分离主导航",
       "已使用 head + grep 校验 3 处归档标识与三端导航链接生效",
       "已在根工作区提交 docs: archive legacy root deploy and stream entrypoints（3749395）",
-      "再次尝试 git push origin HEAD 失败，根工作区仍不存在可用 origin 远端"
+      "再次尝试 git push origin HEAD 失败，根工作区仍不存在可用 origin 远端",
+      "本轮已将 mediamtx-config.yml、mediamtx-config-fixed.yml、mediamtx-minimal.yml 改为根工作区历史归档标记，阻止误用旧流媒体配置作为当前部署入口",
+      "本轮已将 mediamtx-quickstart.sh/.bat、setup-mediamtx-macos.sh、start-mediamtx.sh 改为归档提示脚本",
+      "已执行 head 校验与 bash ./start-mediamtx.sh 运行验证，确认仅输出 Archived root script 提示并中止",
+      "已在根工作区提交 docs: archive legacy mediamtx root entrypoints（c3ee433）"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
