@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T02:21:07+08:00",
-  "currentStep": "已继续清理根工作区剩余历史单体残留：本轮将 src/app/components、src/app/context、src/app/pages、src/app/utils 与 utils/supabase/info.tsx 共 108 个旧单体源码文件统一归档为 Archived root workspace 守卫，并完成脚本校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
+  "updatedAt": "2026-03-09T02:31:50+08:00",
+  "currentStep": "已继续清理根工作区剩余历史单体残留：本轮为 LICENSE/、supabase/、nginx/ 三个历史目录补齐 README 级归档说明，明确根工作区不再作为许可证发布、Supabase 原型或 Nginx 部署入口，并完成 grep 校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "982788f4c2b03ed0fce727e54e6b392fa79d53cc"
+    "workspace-root": "97f29b5"
   },
   "blocking": {
     "status": "partial",
@@ -123,13 +123,15 @@
       "已执行 grep 校验 8 处 src/imports/styles 归档标识命中",
       "已在根工作区提交 docs: archive remaining root imports and styles（b35727c）",
       "本轮已将 src/app/components、src/app/context、src/app/pages、src/app/utils 及 utils/supabase/info.tsx 共 108 个根工作区历史单体源码文件统一改为 Archived root workspace 守卫，并通过脚本校验全部命中归档标识",
-      "已在根工作区提交 docs: archive remaining root app modules（3d1b38b），随后再次尝试 git push origin HEAD，仍因未配置可用 origin 失败"
+      "已在根工作区提交 docs: archive remaining root app modules（3d1b38b），随后再次尝试 git push origin HEAD，仍因未配置可用 origin 失败",
+      "本轮已为 LICENSE/、supabase/、nginx/ 三个历史目录新增 README 级归档说明，补齐目录层面的三端分离导航提示",
+      "已执行 grep -R 校验，确认三个目录 README 均明确标注历史归档与当前子仓库入口"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续清理根工作区其余历史单体残留文件（优先 LICENSE/、supabase/、nginx/、stream-server/ 等历史目录中的剩余说明或空壳内容）"
+    "如仍缺少凭据，继续清理根工作区其余历史单体残留文件（优先根目录残余清单、空目录说明与未归档仓库说明）"
   ]
 }
