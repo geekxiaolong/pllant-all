@@ -717,8 +717,8 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: fc0b83032522cf4365efc8afaf703f97e13ea8c9
-- workspace-root recent local heads (pre-sync latest 2): fc0b83032522cf4365efc8afaf703f97e13ea8c9, 8962388a66ba186a903f51f096186ab9a253e8c2
+- workspace-root: 23a0cf9051f4f174bdb4f131913a7092ba6bc9f4
+- workspace-root recent local heads (pre-sync latest 2): 23a0cf9051f4f174bdb4f131913a7092ba6bc9f4, fc0b8306b3b09d09be8f7ef5d4d41d08bfbfdd7d
 
 结论：
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
