@@ -717,8 +717,8 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: 8962388a66ba186a903f51f096186ab9a253e8c2
-- workspace-root recent local heads (pre-sync latest 2): 8962388a66ba186a903f51f096186ab9a253e8c2, 11f59f3d99c31fb9d1d152aae1ad37099290a43f
+- workspace-root: fc0b83032522cf4365efc8afaf703f97e13ea8c9
+- workspace-root recent local heads (pre-sync latest 2): fc0b83032522cf4365efc8afaf703f97e13ea8c9, 8962388a66ba186a903f51f096186ab9a253e8c2
 
 结论：
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
@@ -802,6 +802,7 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
+- 本轮已为 scripts/root_archive_audit.py 新增 workspace-root recentCommits pre-sync 提交窗口校验，要求 execution-state.json -> recentCommits.workspace-root 对齐 HEAD~1，且 VERIFICATION_RECORD.md 第 26 节显式记录 workspace-root recent local heads (pre-sync latest 2)；首次执行命中 recent commit consistency issues: 2 与 workspace status consistency issues: 1，修正后复跑 RESULT: PASS
 - 已在根工作区提交 chore: validate archive first-screen notices（c6c8edc），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败
 - 本轮已为 scripts/root_archive_audit.py 新增 execution-state.json -> blocking.fallback / nextSteps[2] 与 VERIFICATION_RECORD.md 的阻塞续跑显式校验；首次执行发现 latestAudit、阻塞项 标记缺失且两处续跑文案不一致，修正后复跑 RESULT: PASS
 - 已在根工作区提交 chore: validate blocking snapshot sync（fc72436），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败
