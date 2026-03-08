@@ -1,6 +1,6 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T02:20:55+08:00",
+  "updatedAt": "2026-03-09T02:21:07+08:00",
   "currentStep": "已继续清理根工作区剩余历史单体残留：本轮将 src/app/components、src/app/context、src/app/pages、src/app/utils 与 utils/supabase/info.tsx 共 108 个旧单体源码文件统一归档为 Archived root workspace 守卫，并完成脚本校验；真实 Supabase 写库/存储联调与登录后页面截图回归仍分别受 SUPABASE_SERVICE_ROLE_KEY、测试账号/有效登录态缺失阻塞，后续在凭据未补齐前继续清理根工作区其余历史单体残留文件。",
   "completed": [
     "A1",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "3d1b38b647b34fd1fa3c5e24c05911dcc3871bc7"
+    "workspace-root": "982788f4c2b03ed0fce727e54e6b392fa79d53cc"
   },
   "blocking": {
     "status": "partial",
