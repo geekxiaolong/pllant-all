@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:57 (Asia/Shanghai)
+更新时间：2026-03-09 06:00 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 05:57
+- timestamp: 2026-03-09 06:00
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -590,6 +590,7 @@
 - blocker consistency issues: 0
 - doc timestamp issues: 0
 - recent commit consistency issues: 0
+- root remote consistency issues: 0
 - verification record consistency issues: 0
 
 结论：
@@ -720,3 +721,41 @@
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
 - 后续若 cron 只更新文字进度、漏同步 recentCommits 或误填提交指针，脚本会直接 FAIL，进一步降低跨仓库状态记录漂移风险
 
+### 27. 根仓库 origin 缺失显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把根仓库未配置 `origin` 从“文档里有写到”升级为“实际 Git 远端状态 + 记录文件 + execution-state 三侧显式一致”。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会显式执行 `git remote -v` 与 `git remote get-url origin`
+- 根仓库必须满足：
+  - `git remote -v` 无输出
+  - `git remote get-url origin` 显式返回 `error: No such remote 'origin'`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `git remote -v`、`git remote get-url origin`、`No such remote`、`origin`、`RESULT: PASS`
+- 最近一轮归档审计摘要也必须纳入 `root remote consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `root remote consistency issues: 8`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 27. 根仓库 origin 缺失显式校验`
+     - `execution-state.json -> currentStep` 缺少 `git remote -v` / `git remote get-url origin` / `No such remote` / `origin`
+     - `VERIFICATION_RECORD.md` 正文缺少 `git remote -v` / `git remote get-url origin` / `No such remote` 标记
+   - 同时因 `latestAudit.summary` 尚未纳入 `root remote consistency issues`，额外命中 `verification record consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增根仓库远端状态显式校验与 `root remote consistency issues` 汇总项
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节并固化本轮 `git remote -v` / `git remote get-url origin` 审计结果
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `root remote consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前根仓库远端校验结果：
+- git remote -v: (no output)
+- git remote get-url origin: error: No such remote 'origin'
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“根仓库 origin 是否真的缺失，并且该事实是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
+- 后续若根仓库被悄悄配置了远端、或状态记录仍声称未配置 origin，脚本会直接 FAIL，进一步降低 Git 推送状态记录漂移风险

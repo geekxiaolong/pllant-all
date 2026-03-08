@@ -456,6 +456,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocker consistency issues',
     'doc timestamp issues',
     'recent commit consistency issues',
+    'root remote consistency issues',
     'verification record consistency issues',
 )
 
@@ -504,6 +505,20 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
     'heart-plant-admin',
     'heart-plant-api',
     'workspace-root',
+    'RESULT: PASS',
+)
+
+ROOT_REMOTE_REQUIRED_MARKERS = {
+    'currentStep': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin'),
+    'VERIFICATION_RECORD.md': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_ROOT_REMOTE_HEADING = '### 27. 根仓库 origin 缺失显式校验'
+VERIFICATION_RECORD_ROOT_REMOTE_MARKERS = (
+    'git remote -v',
+    'git remote get-url origin',
+    'No such remote',
+    'origin',
     'RESULT: PASS',
 )
 
@@ -957,6 +972,78 @@ def git_head(path: Path) -> str:
     return result.stdout.strip()
 
 
+def root_remote_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_ROOT_REMOTE_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing root remote section :: '
+            f'{VERIFICATION_RECORD_ROOT_REMOTE_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_ROOT_REMOTE_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD root remote marker missing :: {marker}')
+
+    current_step = state.get('currentStep', '')
+    for marker in ROOT_REMOTE_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing root remote marker :: {marker}')
+
+    for marker in ROOT_REMOTE_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing root remote marker :: {marker}')
+
+    blocking_point = state.get('blocking', {}).get('point', '')
+    if 'origin' not in blocking_point or '未配置' not in blocking_point:
+        gaps.append('execution-state blocking.point missing explicit root origin blocker')
+
+    remote_v = subprocess.run(
+        ['git', 'remote', '-v'],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    remote_get = subprocess.run(
+        ['git', 'remote', 'get-url', 'origin'],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    if remote_v.returncode != 0:
+        stderr = remote_v.stderr.strip() or remote_v.stdout.strip() or 'unknown git error'
+        gaps.append(f'git remote -v failed unexpectedly :: {stderr}')
+    elif remote_v.stdout.strip():
+        gaps.append(f'root git remote unexpectedly configured :: {remote_v.stdout.strip()}')
+
+    expected_error = "error: No such remote 'origin'"
+    actual_error = (remote_get.stderr.strip() or remote_get.stdout.strip())
+    if remote_get.returncode == 0:
+        gaps.append(f'root origin unexpectedly configured :: {remote_get.stdout.strip()}')
+    elif expected_error not in actual_error:
+        gaps.append(
+            'git remote get-url origin unexpected stderr :: '
+            f'{actual_error or 'missing stderr'}'
+        )
+
+    if section_text:
+        if '- git remote -v: (no output)' not in section_text:
+            gaps.append('VERIFICATION_RECORD root remote marker missing :: - git remote -v: (no output)')
+        if f'- git remote get-url origin: {expected_error}' not in section_text:
+            gaps.append(
+                'VERIFICATION_RECORD root remote marker missing :: '
+                f'- git remote get-url origin: {expected_error}'
+            )
+
+    return gaps
+
+
 def recent_commit_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1106,6 +1193,7 @@ def main() -> int:
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
     recent_commit_issues = recent_commit_consistency_gaps()
+    root_remote_issues = root_remote_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1132,6 +1220,7 @@ def main() -> int:
         'blocker consistency issues': len(blocker_consistency_issues),
         'doc timestamp issues': len(doc_timestamp_issues),
         'recent commit consistency issues': len(recent_commit_issues),
+        'root remote consistency issues': len(root_remote_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
@@ -1184,6 +1273,9 @@ def main() -> int:
     if recent_commit_issues:
         print('\n[recent commit consistency issues]')
         print('\n'.join(recent_commit_issues))
+    if root_remote_issues:
+        print('\n[root remote consistency issues]')
+        print('\n'.join(root_remote_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1203,6 +1295,7 @@ def main() -> int:
         or blocker_consistency_issues
         or doc_timestamp_issues
         or recent_commit_issues
+        or root_remote_issues
         or verification_record_issues
     )
     if failed:
