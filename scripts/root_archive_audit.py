@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 EXCLUDED_NAMES = {'.git', 'node_modules', 'heart-plant', 'heart-plant-admin', 'heart-plant-api'}
 MANIFEST = ROOT / 'ROOT_ARCHIVE_MANIFEST.md'
+EXECUTION_STATE = ROOT / 'execution-state.json'
 
 TOP_LEVEL_EXPECTED = {
     '.gitignore',
@@ -162,6 +164,7 @@ MANIFEST_SECTION_EXPECTED = {
         '.gitignore',
         'package-lock.json',
         '.vscode/settings.json',
+        'scripts/README.md',
         'scripts/root_archive_audit.py',
     },
     '### 2.1 历史文档': {
@@ -290,6 +293,84 @@ RETAINED_ROOT_DOC_TARGETS = {
 RETAINED_TOP_LEVEL_DIRS = {
     '.vscode',
     'scripts',
+}
+
+DOC_REFERENCE_REQUIREMENTS = {
+    'README.md': {
+        'START_HERE.md',
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'ROOT_ARCHIVE_MANIFEST.md',
+        'THREE-APP-DEPLOYMENT.md',
+    },
+    'START_HERE.md': {
+        'README.md',
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'ROOT_ARCHIVE_MANIFEST.md',
+        'THREE-APP-DEPLOYMENT.md',
+    },
+    'ROOT_ARCHIVE_MANIFEST.md': {
+        'README.md',
+        'START_HERE.md',
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'THREE-APP-DEPLOYMENT.md',
+        'scripts/root_archive_audit.py',
+        '.vscode/settings.json',
+    },
+    'THREE-APP-SPLIT-STATUS.md': {
+        'EXECUTION_PLAN.md',
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'THREE-APP-DEPLOYMENT.md',
+    },
+    'THREE-APP-DEPLOYMENT.md': {
+        'DEPLOYMENT.md',
+        'heart-plant',
+        'heart-plant-admin',
+        'heart-plant-api',
+        'SUPABASE_SERVICE_ROLE_KEY',
+    },
+    'DEPLOYMENT.md': {
+        'THREE-APP-DEPLOYMENT.md',
+        'heart-plant/',
+        'heart-plant-admin/',
+        'heart-plant-api/',
+        'SUPABASE_SERVICE_ROLE_KEY',
+    },
+}
+
+BLOCKER_PHRASES = {
+    'service_role': {
+        'execution_state': ('SUPABASE_SERVICE_ROLE_KEY',),
+        'required_docs': {
+            'README.md': ('SUPABASE_SERVICE_ROLE_KEY',),
+            'START_HERE.md': ('SUPABASE_SERVICE_ROLE_KEY',),
+            'ROOT_ARCHIVE_MANIFEST.md': ('SUPABASE_SERVICE_ROLE_KEY',),
+            'THREE-APP-SPLIT-STATUS.md': ('SUPABASE_SERVICE_ROLE_KEY',),
+            'THREE-APP-DEPLOYMENT.md': ('SUPABASE_SERVICE_ROLE_KEY',),
+        },
+    },
+    'login_state': {
+        'execution_state': ('测试账号', 'Supabase 登录态'),
+        'required_docs': {
+            'README.md': ('测试账号', 'Supabase 登录态'),
+            'START_HERE.md': ('测试账号', '登录态'),
+            'ROOT_ARCHIVE_MANIFEST.md': ('测试账号', 'Supabase 登录态'),
+            'THREE-APP-SPLIT-STATUS.md': ('测试账号', 'Supabase 登录态'),
+            'VERIFICATION_RECORD.md': ('测试账号', '登录态'),
+        },
+    },
+    'git_origin': {
+        'execution_state': ('origin',),
+        'required_docs': {
+            'README.md': ('origin',),
+            'START_HERE.md': ('origin',),
+            'ROOT_ARCHIVE_MANIFEST.md': ('origin',),
+            'THREE-APP-SPLIT-STATUS.md': ('origin',),
+        },
+    },
 }
 
 
@@ -458,7 +539,7 @@ def retained_baseline_gaps(manifest_text: str) -> list[str]:
     gaps: list[str] = []
     retained = MANIFEST_SECTION_EXPECTED['## 一、当前仍应保留并持续维护的根目录文件']
 
-    top_level_retained = {item for item in retained if '/' not in item or item.startswith('.vscode/')}
+    top_level_retained = {item for item in retained if '/' not in item}
     nested_retained = retained - top_level_retained
 
     missing_top_level_allowlist = sorted(top_level_retained - TOP_LEVEL_EXPECTED)
@@ -507,6 +588,46 @@ def retained_baseline_gaps(manifest_text: str) -> list[str]:
     return gaps
 
 
+def doc_reference_gaps() -> list[str]:
+    gaps: list[str] = []
+    for rel, markers in sorted(DOC_REFERENCE_REQUIREMENTS.items()):
+        path = ROOT / rel
+        if not path.exists():
+            gaps.append(f'doc reference source missing on disk :: {rel}')
+            continue
+        text = path.read_text(encoding='utf-8', errors='ignore')
+        for marker in sorted(markers):
+            if marker not in text:
+                gaps.append(f'doc reference missing :: {rel} -> {marker}')
+    return gaps
+
+
+def blocker_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    blocking_point = state.get('blocking', {}).get('point', '')
+
+    for blocker_key, spec in sorted(BLOCKER_PHRASES.items()):
+        expected_state_markers = spec['execution_state']
+        if not all(marker in blocking_point for marker in expected_state_markers):
+            gaps.append(
+                'execution-state blocker marker missing :: '
+                f'{blocker_key} -> required={expected_state_markers}'
+            )
+        for rel, markers in sorted(spec['required_docs'].items()):
+            path = ROOT / rel
+            if not path.exists():
+                gaps.append(f'blocker doc missing on disk :: {blocker_key} -> {rel}')
+                continue
+            text = path.read_text(encoding='utf-8', errors='ignore')
+            if not all(marker in text for marker in markers):
+                gaps.append(
+                    'blocker doc marker missing :: '
+                    f'{blocker_key} -> {rel} requires {markers}'
+                )
+    return gaps
+
+
 def main() -> int:
     manifest_text = MANIFEST.read_text(encoding='utf-8')
     entries = top_level_entries()
@@ -518,6 +639,9 @@ def main() -> int:
     navigation_gaps = navigation_marker_gaps()
     manifest_section_issues = manifest_section_gaps(manifest_text)
     manifest_classification_issues = manifest_classification_coverage_gaps()
+    retained_issues = retained_baseline_gaps(manifest_text)
+    doc_reference_issues = doc_reference_gaps()
+    blocker_consistency_issues = blocker_consistency_gaps()
 
     print('== Root archive audit ==')
     print(f'root: {ROOT}')
@@ -530,6 +654,9 @@ def main() -> int:
     print(f'navigation marker gaps: {len(navigation_gaps)}')
     print(f'manifest section issues: {len(manifest_section_issues)}')
     print(f'manifest classification issues: {len(manifest_classification_issues)}')
+    print(f'retained baseline issues: {len(retained_issues)}')
+    print(f'doc reference issues: {len(doc_reference_issues)}')
+    print(f'blocker consistency issues: {len(blocker_consistency_issues)}')
 
     if missing_readmes:
         print('\n[missing README dirs]')
@@ -555,6 +682,15 @@ def main() -> int:
     if manifest_classification_issues:
         print('\n[manifest classification issues]')
         print('\n'.join(manifest_classification_issues))
+    if retained_issues:
+        print('\n[retained baseline issues]')
+        print('\n'.join(retained_issues))
+    if doc_reference_issues:
+        print('\n[doc reference issues]')
+        print('\n'.join(doc_reference_issues))
+    if blocker_consistency_issues:
+        print('\n[blocker consistency issues]')
+        print('\n'.join(blocker_consistency_issues))
 
     failed = bool(
         missing_readmes
@@ -565,6 +701,9 @@ def main() -> int:
         or navigation_gaps
         or manifest_section_issues
         or manifest_classification_issues
+        or retained_issues
+        or doc_reference_issues
+        or blocker_consistency_issues
     )
     if failed:
         print('\nRESULT: FAIL')

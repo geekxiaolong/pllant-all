@@ -448,3 +448,36 @@
 结论：
 - 根工作区归档巡检现已同时覆盖 archive baseline 与 retained baseline 两侧的一致性
 - 后续若有人把活动文件从 retained manifest 中漏掉、误纳入 archive targets、或删掉根文档之间的关键导航关系，脚本都能直接报错
+
+### 18. 顶层导航双向引用与阻塞项清单一致性校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，将根工作区归档巡检进一步扩展到“主导航文档之间是否仍互相指回”以及“execution-state 中的硬阻塞是否仍被各主文档同步承接”。
+
+新增校验项：
+- 为顶层导航文档建立显式引用矩阵，要求以下双向/闭环关系持续成立：
+  - `README.md` ↔ `START_HERE.md`
+  - `README.md` / `START_HERE.md` / `ROOT_ARCHIVE_MANIFEST.md` 持续互相引用 `execution-state.json`、`VERIFICATION_RECORD.md`、`THREE-APP-DEPLOYMENT.md`
+  - `THREE-APP-SPLIT-STATUS.md` 持续指向 `EXECUTION_PLAN.md`、`execution-state.json`、`VERIFICATION_RECORD.md`、`THREE-APP-DEPLOYMENT.md`
+  - `DEPLOYMENT.md` ↔ `THREE-APP-DEPLOYMENT.md` 持续保留新旧部署文档之间的回指关系
+- 新增 `execution-state.json` 阻塞项一致性校验，要求以下三类硬阻塞继续在主文档中命中对应关键词：
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - 测试账号 / Supabase 登录态
+  - 根仓库未配置 `origin`
+- 将 `scripts/README.md` 提升为 retained baseline 的显式清单项，并在 `ROOT_ARCHIVE_MANIFEST.md` 中补齐说明，避免活动脚本目录说明文件游离在 retained 清单之外
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 新规则立即发现 1 处 retained baseline 漏项：
+     - `retained manifest missing activity path :: scripts/README.md`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 在 `ROOT_ARCHIVE_MANIFEST.md -> 一、当前仍应保留并持续维护的根目录文件` 中补充 `scripts/README.md`
+   - 同步更新脚本内 retained baseline 常量，使 manifest 基线与 audit 规则一致
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `retained baseline issues: 0`
+   - `doc reference issues: 0`
+   - `blocker consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检已覆盖“主导航文档闭环引用”与“execution-state 阻塞项是否在各主文档持续同步”两层约束
+- 后续若有人删掉顶层导航回指、漏同步阻塞说明、或把活动脚本目录说明从 retained manifest 中遗漏，脚本可直接失败并暴露缺口
