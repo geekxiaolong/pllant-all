@@ -347,3 +347,34 @@
 结论：
 - 根工作区归档巡检已从“结构层存在性检查”提升到“内容层标识一致性检查”
 - 之后若有人把历史文件改回无归档提示、或删掉三端导航入口，cron 可直接在脚本层发现，而不再依赖人工抽样
+
+### 15. 根工作区 manifest 分类段落一致性校验补强
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，让它不仅检查 `ROOT_ARCHIVE_MANIFEST.md` 是否“提到过”顶层资产，还校验这些资产是否落在正确的分类段落中。
+
+新增校验项：
+- 为 `ROOT_ARCHIVE_MANIFEST.md` 建立显式 section -> expected entries 基线，覆盖：
+  - `## 一、当前仍应保留并持续维护的根目录文件`
+  - `### 2.1 历史文档`
+  - `### 2.2 历史脚本 / 历史入口守卫`
+  - `### 2.3 历史目录（目录内已有 README 归档说明）`
+- 审计脚本现会解析各段中的列表项，检查：
+  - 应在该段中的条目是否缺失
+  - 不应落在该段中的条目是否被误归类
+- 对最后一个清单段落的截取逻辑做了收紧，避免把后续“维护约定”中的反引号示例误识别为目录清单项
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 发现新规则有效抓到一个真实解析问题：
+     - `### 2.3 历史目录（目录内已有 README 归档说明） :: unexpected entry execution-state.json`
+   - 根因不是 manifest 分类错误，而是解析范围过宽，把第六节维护约定中的 `` `execution-state.json` `` 误识别成 2.3 清单项
+   - 输出 `RESULT: FAIL`
+2. 调整脚本：
+   - 将 section 解析改为逐行提取真正的列表项
+   - 将最后一段的截取终点改为“下一个 Markdown heading”，避免把后续正文混入当前清单段
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `manifest section issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“是否列入 manifest”与“是否列入正确段落”两层一致性约束
+- 后续即便 `ROOT_ARCHIVE_MANIFEST.md` 中出现分类漂移、段落误归类或列表解析回归，也能被脚本直接发现

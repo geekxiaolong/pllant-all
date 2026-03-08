@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -150,6 +151,78 @@ ARCHIVE_TARGETS = {
     'workflows/README.md',
 }
 
+MANIFEST_SECTION_EXPECTED = {
+    '## 一、当前仍应保留并持续维护的根目录文件': {
+        'README.md',
+        'START_HERE.md',
+        'EXECUTION_PLAN.md',
+        'execution-state.json',
+        'VERIFICATION_RECORD.md',
+        'ROOT_ARCHIVE_MANIFEST.md',
+        'THREE-APP-DEPLOYMENT.md',
+        'THREE-APP-SPLIT-STATUS.md',
+        '.gitignore',
+        'package-lock.json',
+        '.vscode/settings.json',
+        'scripts/root_archive_audit.py',
+    },
+    '### 2.1 历史文档': {
+        'DEPLOYMENT.md',
+        'DESIGN.md',
+        'GITHUB_SETUP.md',
+        'GITHUB_UPLOAD_GUIDE.md',
+        'UPLOAD_TO_GITHUB.md',
+        '上传到GitHub说明.md',
+        'FILES_READY_FOR_GITHUB.md',
+        'QUICK_DEPLOY.md',
+        'MACOS_QUICKSTART.md',
+        'API_FIX_SUMMARY.md',
+        'ATTRIBUTIONS.md',
+        'FIX_SUMMARY.md',
+        'TIMELINE_FIX_SUMMARY.md',
+        'VIDEO_STATUS_GUIDE.md',
+        'STREAMING_README.md',
+        'STREAMING_QUICKSTART.md',
+        'WEBRTC_SETUP.md',
+        'WEBRTC_DEBUG_GUIDE.md',
+        'mediamtx-setup.md',
+    },
+    '### 2.2 历史脚本 / 历史入口守卫': {
+        'deploy.sh',
+        'deploy-supabase.sh',
+        'git-init.sh',
+        'git-push.sh',
+        'quick-upload.sh',
+        'quick-upload.bat',
+        'mediamtx-config.yml',
+        'mediamtx-config-fixed.yml',
+        'mediamtx-minimal.yml',
+        'mediamtx-quickstart.sh',
+        'mediamtx-quickstart.bat',
+        'setup-mediamtx-macos.sh',
+        'start-mediamtx.sh',
+        'docker-compose.yml',
+        'index.html',
+        'package.json',
+        'postcss.config.mjs',
+        'vite.config.ts',
+    },
+    '### 2.3 历史目录（目录内已有 README 归档说明）': {
+        'src/',
+        'supabase/',
+        'stream-server/',
+        'nginx/',
+        'guidelines/',
+        'utils/',
+        'workflows/',
+        'LICENSE/',
+        '.vscode/',
+    },
+}
+
+MANIFEST_SECTION_ORDER = list(MANIFEST_SECTION_EXPECTED)
+INLINE_CODE_RE = re.compile(r"`([^`]+)`")
+
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -222,6 +295,55 @@ def navigation_marker_gaps() -> list[str]:
     return missing
 
 
+def extract_manifest_section(text: str, heading: str, next_heading: str | None) -> str:
+    start = text.find(heading)
+    if start == -1:
+        return ''
+    start += len(heading)
+    if next_heading:
+        end = text.find(next_heading, start)
+        if end != -1:
+            return text[start:end]
+    match = re.search(r'^#{1,6}\s+', text[start:], re.MULTILINE)
+    end = start + match.start() if match else len(text)
+    return text[start:end]
+
+
+def parse_manifest_sections(text: str) -> dict[str, set[str]]:
+    parsed: dict[str, set[str]] = {}
+    for index, heading in enumerate(MANIFEST_SECTION_ORDER):
+        next_heading = MANIFEST_SECTION_ORDER[index + 1] if index + 1 < len(MANIFEST_SECTION_ORDER) else None
+        section_text = extract_manifest_section(text, heading, next_heading)
+        entries: set[str] = set()
+        for line in section_text.splitlines():
+            stripped = line.lstrip()
+            if not stripped.startswith('- '):
+                continue
+            match = INLINE_CODE_RE.search(stripped)
+            if match:
+                entries.add(match.group(1))
+        parsed[heading] = entries
+    return parsed
+
+
+def manifest_section_gaps(manifest_text: str) -> list[str]:
+    gaps: list[str] = []
+    parsed = parse_manifest_sections(manifest_text)
+    for heading in MANIFEST_SECTION_ORDER:
+        expected = MANIFEST_SECTION_EXPECTED[heading]
+        actual = parsed.get(heading, set())
+        missing = sorted(expected - actual)
+        unexpected = sorted(actual - expected)
+        if not actual:
+            gaps.append(f'{heading} :: missing section or no parsed bullet entries')
+            continue
+        for item in missing:
+            gaps.append(f'{heading} :: missing entry {item}')
+        for item in unexpected:
+            gaps.append(f'{heading} :: unexpected entry {item}')
+    return gaps
+
+
 def main() -> int:
     manifest_text = MANIFEST.read_text(encoding='utf-8')
     entries = top_level_entries()
@@ -231,6 +353,7 @@ def main() -> int:
     unexpected = unexpected_entries(entries)
     archive_gaps = archive_marker_gaps()
     navigation_gaps = navigation_marker_gaps()
+    manifest_section_issues = manifest_section_gaps(manifest_text)
 
     print('== Root archive audit ==')
     print(f'root: {ROOT}')
@@ -241,6 +364,7 @@ def main() -> int:
     print(f'unexpected top-level entries: {len(unexpected)}')
     print(f'archive marker gaps: {len(archive_gaps)}')
     print(f'navigation marker gaps: {len(navigation_gaps)}')
+    print(f'manifest section issues: {len(manifest_section_issues)}')
 
     if missing_readmes:
         print('\n[missing README dirs]')
@@ -260,6 +384,9 @@ def main() -> int:
     if navigation_gaps:
         print('\n[navigation marker gaps]')
         print('\n'.join(navigation_gaps))
+    if manifest_section_issues:
+        print('\n[manifest section issues]')
+        print('\n'.join(manifest_section_issues))
 
     failed = bool(
         missing_readmes
@@ -268,6 +395,7 @@ def main() -> int:
         or unexpected
         or archive_gaps
         or navigation_gaps
+        or manifest_section_issues
     )
     if failed:
         print('\nRESULT: FAIL')

@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T03:49:00+08:00",
-  "currentStep": "本轮已补强 scripts/root_archive_audit.py，将根工作区归档巡检从结构存在性检查提升为内容级归档标识/导航入口抽检；首次执行暴露 6 处 marker 词典覆盖缺口，修正后复跑 RESULT: PASS。",
+  "updatedAt": "2026-03-09T04:03:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 分类段落一致性校验；首次执行暴露 section 解析范围过宽导致误报 execution-state.json，修正列表项提取与段落截断逻辑后复跑 RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -148,13 +148,15 @@
       "本轮已新增 scripts/root_archive_audit.py，对根工作区残余清单、目录 README 覆盖、空目录与顶层异常项进行脚本化审计，并验证输出 RESULT: PASS",
       "已在根工作区提交 chore: add root archive audit script（a959938）",
       "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端",
-      "本轮已补强 scripts/root_archive_audit.py，新增历史文档/脚本/配置/目录 README 的 archive marker 与 navigation marker 校验；首次执行发现 6 处归档标识词典覆盖缺口，修正后复跑 RESULT: PASS"
+      "本轮已补强 scripts/root_archive_audit.py，新增历史文档/脚本/配置/目录 README 的 archive marker 与 navigation marker 校验；首次执行发现 6 处归档标识词典覆盖缺口，修正后复跑 RESULT: PASS",
+      "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 分类段落一致性校验；首次执行发现 section 解析范围过宽，将第六节维护约定中的 execution-state.json 误判为 2.3 段落条目，修正逐行列表提取与 Markdown heading 截断逻辑后复跑 RESULT: PASS",
+      "已更新 VERIFICATION_RECORD.md 记录本轮 manifest 分类一致性回归与脚本修复过程"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充归档标识抽检、README/manifest 一致性检查），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 manifest 分类段落与实际文件类别的一致性脚本校验）"
+    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 manifest 保留/归档分类与 archive targets 基线的交叉覆盖校验）"
   ]
 }
