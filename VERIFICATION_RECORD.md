@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:20 (Asia/Shanghai)
+更新时间：2026-03-09 06:23 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:20
+- timestamp: 2026-03-09 06:23
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -717,7 +717,7 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: fc7243697aec557726be1dd3c794120dc5f7d9cd
+- workspace-root: a1707e5b8cc1fcb62f60d5e1693165dbd7e25097
 
 结论：
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
