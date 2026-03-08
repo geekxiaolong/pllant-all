@@ -458,6 +458,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'recent commit consistency issues',
     'root remote consistency issues',
     'blocking snapshot consistency issues',
+    'workspace status consistency issues',
     'verification record consistency issues',
 )
 
@@ -538,6 +539,20 @@ VERIFICATION_RECORD_BLOCKING_SNAPSHOT_MARKERS = (
     'SUPABASE_SERVICE_ROLE_KEY',
     '测试账号',
     'origin',
+    'RESULT: PASS',
+)
+
+WORKSPACE_STATUS_ALLOWED_SHORT = ('?? EXECUTION_PLAN.md',)
+WORKSPACE_STATUS_REQUIRED_MARKERS = {
+    'currentStep': ('git status --short', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('git status --short', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_WORKSPACE_STATUS_HEADING = '### 29. 根工作区 git status 显式校验'
+VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
+    'git status --short',
+    '?? EXECUTION_PLAN.md',
+    'clean tracked files',
     'RESULT: PASS',
 )
 
@@ -976,6 +991,20 @@ def state_sync_gaps() -> list[str]:
     return gaps
 
 
+def git_status_short(path: Path) -> list[str]:
+    result = subprocess.run(
+        ['git', 'status', '--short'],
+        cwd=path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip() or 'unknown git error'
+        raise RuntimeError(stderr)
+    return [line.rstrip() for line in result.stdout.splitlines() if line.strip()]
+
+
 def git_head(path: Path) -> str:
     result = subprocess.run(
         ['git', 'rev-parse', 'HEAD'],
@@ -1189,6 +1218,56 @@ def recent_commit_consistency_gaps() -> list[str]:
     return gaps
 
 
+def workspace_status_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_WORKSPACE_STATUS_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing workspace status section :: '
+            f'{VERIFICATION_RECORD_WORKSPACE_STATUS_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD workspace status marker missing :: {marker}')
+
+    current_step = state.get('currentStep', '')
+    for marker in WORKSPACE_STATUS_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing workspace status marker :: {marker}')
+
+    for marker in WORKSPACE_STATUS_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing workspace status marker :: {marker}')
+
+    status_lines = git_status_short(ROOT)
+    unexpected = [line for line in status_lines if line not in WORKSPACE_STATUS_ALLOWED_SHORT]
+    if unexpected:
+        for line in unexpected:
+            gaps.append(f'root git status unexpected dirty entry :: {line}')
+
+    expected_line = WORKSPACE_STATUS_ALLOWED_SHORT[0]
+    if expected_line not in status_lines:
+        gaps.append(f'root git status missing expected entry :: {expected_line}')
+
+    if section_text:
+        if f'- git status --short: {expected_line}' not in section_text:
+            gaps.append(
+                'VERIFICATION_RECORD workspace status marker missing :: '
+                f'- git status --short: {expected_line}'
+            )
+        if '- tracked files: clean tracked files' not in section_text:
+            gaps.append(
+                'VERIFICATION_RECORD workspace status marker missing :: '
+                '- tracked files: clean tracked files'
+            )
+
+    return gaps
+
+
 def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1276,6 +1355,7 @@ def main() -> int:
     recent_commit_issues = recent_commit_consistency_gaps()
     root_remote_issues = root_remote_consistency_gaps()
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
+    workspace_status_issues = workspace_status_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1304,6 +1384,7 @@ def main() -> int:
         'recent commit consistency issues': len(recent_commit_issues),
         'root remote consistency issues': len(root_remote_issues),
         'blocking snapshot consistency issues': len(blocking_snapshot_issues),
+        'workspace status consistency issues': len(workspace_status_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
@@ -1362,6 +1443,9 @@ def main() -> int:
     if blocking_snapshot_issues:
         print('\n[blocking snapshot consistency issues]')
         print('\n'.join(blocking_snapshot_issues))
+    if workspace_status_issues:
+        print('\n[workspace status consistency issues]')
+        print('\n'.join(workspace_status_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1383,6 +1467,7 @@ def main() -> int:
         or recent_commit_issues
         or root_remote_issues
         or blocking_snapshot_issues
+        or workspace_status_issues
         or verification_record_issues
     )
     if failed:

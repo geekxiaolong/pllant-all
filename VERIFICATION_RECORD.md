@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:13 (Asia/Shanghai)
+更新时间：2026-03-09 06:20 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:13
+- timestamp: 2026-03-09 06:20
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -592,6 +592,7 @@
 - recent commit consistency issues: 0
 - root remote consistency issues: 0
 - blocking snapshot consistency issues: 0
+- workspace status consistency issues: 0
 - verification record consistency issues: 0
 
 结论：
@@ -812,3 +813,45 @@
 结论：
 - 根工作区归档巡检现已覆盖“blocking 快照与续跑清单是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
 - 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险
+
+
+### 29. 根工作区 git status 显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把根工作区 `git status --short` 也纳入跨文件显式校验，避免续跑时“工作区是否真的只剩计划文件未跟踪”与状态记录漂移。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 会显式执行 `git status --short`
+- 根工作区必须满足：
+  - `git status --short` 仅剩 `?? EXECUTION_PLAN.md`
+  - tracked files 保持 `clean tracked files`，避免有未提交修改潜伏在根仓库
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `git status --short`、`?? EXECUTION_PLAN.md`、`RESULT: PASS`
+- 最近一轮归档审计摘要也必须纳入 `workspace status consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `workspace status consistency issues: 5`
+   - 具体缺口：
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 29. 根工作区 git status 显式校验`
+     - `execution-state.json -> currentStep` 缺少 `git status --short` / `?? EXECUTION_PLAN.md`
+     - `VERIFICATION_RECORD.md` 正文缺少 `?? EXECUTION_PLAN.md` 标记
+     - 因当前正在修改 `scripts/root_archive_audit.py`，首次回归时额外命中 `root git status unexpected dirty entry ::  M scripts/root_archive_audit.py`
+   - 同时因 `latestAudit.summary` 尚未纳入 `workspace status consistency issues`，额外命中 `verification record consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `workspace_status_consistency_gaps()` 与 `workspace status consistency issues` 汇总项
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节并固化本轮 `git status --short` 审计结果
+   - 提交根工作区改动后复跑审计，确认根仓库仅剩 `?? EXECUTION_PLAN.md` 未跟踪，tracked files 已恢复 clean
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前根工作区状态校验结果：
+- git status --short: ?? EXECUTION_PLAN.md
+- tracked files: clean tracked files
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“工作区是否真的只剩 `EXECUTION_PLAN.md` 未跟踪、tracked files 是否保持干净”这一层约束
+- 后续若 cron 只更新文字进度、却把根仓库留在脏状态，脚本会直接 FAIL，进一步降低续跑记录与真实工作区状态漂移风险
