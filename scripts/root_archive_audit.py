@@ -462,6 +462,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocking snapshot consistency issues',
     'workspace status consistency issues',
     'blocking status consistency issues',
+    'latest blocking tried consistency issues',
     'verification record consistency issues',
     'execution plan consistency issues',
     'completed sequence consistency issues',
@@ -594,6 +595,20 @@ VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS = (
     'origin',
     'RESULT: PASS',
 )
+
+VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
+VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
+    'blocking.tried',
+    'latest tried entry',
+    'currentStep',
+    'VERIFICATION_RECORD.md',
+    'execution-state.json',
+    'RESULT: PASS',
+)
+LATEST_BLOCKING_TRIED_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.tried', 'latest tried entry', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.tried', 'latest tried entry', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
+}
 
 PLAN_TASK_RE = re.compile(r'^- \[([ xX])\]\s+([A-D]\d+)\.\s+(.*)$')
 VERIFICATION_RECORD_EXECUTION_PLAN_HEADING = '### 33. EXECUTION_PLAN 完成状态显式校验'
@@ -1659,6 +1674,59 @@ def workspace_status_consistency_gaps() -> list[str]:
 
 
 
+def latest_blocking_tried_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    blocking = state.get('blocking', {})
+    tried = blocking.get('tried')
+    if not isinstance(tried, list) or not tried:
+        return ['execution-state blocking.tried missing or empty for latest tried check']
+
+    latest_entry = tried[-1]
+    if not isinstance(latest_entry, str) or not latest_entry.strip():
+        return ['execution-state blocking.tried latest entry missing or blank']
+
+    current_step = state.get('currentStep', '')
+    for marker in LATEST_BLOCKING_TRIED_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing latest blocking.tried marker :: {marker}')
+    if latest_entry not in current_step:
+        gaps.append('execution-state currentStep missing latest blocking.tried exact entry')
+
+    for marker in LATEST_BLOCKING_TRIED_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing latest blocking.tried marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing latest blocking.tried section :: '
+            f'{VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD latest blocking.tried marker missing :: {marker}')
+
+    exact_marker = f'- latest tried entry exact snapshot: {latest_entry}'
+    if exact_marker not in section_text:
+        gaps.append(f'VERIFICATION_RECORD latest blocking.tried marker missing :: {exact_marker}')
+
+    snapshot_section = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING)
+    if not snapshot_section:
+        gaps.append(
+            'VERIFICATION_RECORD missing blocking snapshot section for latest tried cross-check :: '
+            f'{VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING}'
+        )
+    elif latest_entry not in snapshot_section:
+        gaps.append('VERIFICATION_RECORD blocking snapshot section missing latest blocking.tried entry')
+
+    return gaps
+
+
 def blocking_status_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1790,6 +1858,7 @@ def main() -> int:
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
+    latest_blocking_tried_issues = latest_blocking_tried_consistency_gaps()
     execution_plan_issues = execution_plan_consistency_gaps()
     completed_sequence_issues = completed_sequence_consistency_gaps()
     fallback_route_issues = fallback_route_consistency_gaps()
@@ -1824,6 +1893,7 @@ def main() -> int:
         'blocking snapshot consistency issues': len(blocking_snapshot_issues),
         'workspace status consistency issues': len(workspace_status_issues),
         'blocking status consistency issues': len(blocking_status_issues),
+        'latest blocking tried consistency issues': len(latest_blocking_tried_issues),
         'verification record consistency issues': 0,
         'execution plan consistency issues': len(execution_plan_issues),
         'completed sequence consistency issues': len(completed_sequence_issues),
@@ -1894,6 +1964,9 @@ def main() -> int:
     if blocking_status_issues:
         print('\n[blocking status consistency issues]')
         print('\n'.join(blocking_status_issues))
+    if latest_blocking_tried_issues:
+        print('\n[latest blocking tried consistency issues]')
+        print('\n'.join(latest_blocking_tried_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1927,6 +2000,7 @@ def main() -> int:
         or blocking_snapshot_issues
         or workspace_status_issues
         or blocking_status_issues
+        or latest_blocking_tried_issues
         or verification_record_issues
         or execution_plan_issues
         or completed_sequence_issues
