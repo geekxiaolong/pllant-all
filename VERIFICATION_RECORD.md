@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:00 (Asia/Shanghai)
+更新时间：2026-03-09 06:11 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:00
+- timestamp: 2026-03-09 06:11
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -591,13 +591,14 @@
 - doc timestamp issues: 0
 - recent commit consistency issues: 0
 - root remote consistency issues: 0
+- blocking snapshot consistency issues: 0
 - verification record consistency issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
 - 后续若 cron 只更新文字总结、不更新机读摘要，脚本会直接 FAIL，进一步降低状态记录漂移风险
 
-### 23. 最近一轮归档审计摘要时间戳显式校验
+### 23.# 23. 最近一轮归档审计摘要时间戳显式校验
 本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把最近一轮机读摘要中的时间戳也纳入跨文件显式基线校验。
 
 新增校验项：
@@ -759,3 +760,55 @@
 结论：
 - 根工作区归档巡检现已覆盖“根仓库 origin 是否真的缺失，并且该事实是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
 - 后续若根仓库被悄悄配置了远端、或状态记录仍声称未配置 origin，脚本会直接 FAIL，进一步降低 Git 推送状态记录漂移风险
+
+### 28. blocking 快照与续跑清单显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `blocking.point`、`blocking.tried` 与 `nextSteps` 也纳入跨文件显式校验，避免阻塞快照只停留在 `execution-state.json` 一侧。
+
+新增校验项：
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `blocking.point`、`blocking.tried`、`nextSteps`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，固化当前阻塞快照与续跑清单
+- 审计脚本会检查 `blocking.point` 是否继续显式命中 `SUPABASE_SERVICE_ROLE_KEY`、`测试账号`、`origin`
+- 审计脚本会检查 `blocking.tried` 最近 3 条记录，以及 `nextSteps[0..2]` 是否落盘到本节，避免续跑策略与验证记录脱节
+- 同时将 `blocking snapshot consistency issues` 纳入最近一轮归档审计摘要，避免只修正文案不修正机读统计
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `blocking snapshot consistency issues: 5`
+   - 具体缺口：
+     - `execution-state.json -> currentStep` 缺少 `blocking.point`
+     - `execution-state.json -> currentStep` 缺少 `blocking.tried`
+     - `VERIFICATION_RECORD.md` 正文缺少 `blocking.point`
+     - `VERIFICATION_RECORD.md` 正文缺少 `blocking.tried`
+     - `VERIFICATION_RECORD.md` 缺少本节 `### 28. blocking 快照与续跑清单显式校验`
+   - 同时因 `latestAudit.summary` 尚未纳入 `blocking snapshot consistency issues`，额外命中 `verification record consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `blocking_snapshot_consistency_gaps()` 与 `blocking snapshot consistency issues` 汇总项
+   - 将 `__pycache__` 纳入排除项，并清理 `scripts/__pycache__`，避免 Python 编译缓存误报目录缺 README
+   - 同步回写 `execution-state.json -> currentStep`、`latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节并落盘当前 `blocking.point`、`blocking.tried`、`nextSteps` 快照
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `missing README dirs: 0`
+   - `blocking snapshot consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 blocking.point 快照：
+- 真实 Supabase 写库/存储联调仍缺 `SUPABASE_SERVICE_ROLE_KEY`
+- 登录后截图回归仍缺测试账号或有效 Supabase 登录态
+- 根工作区仓库仍未配置可用 `origin`
+
+当前 blocking.tried 最近 3 条：
+- 已更新 VERIFICATION_RECORD.md 与 execution-state.json，同步本轮首屏提示基线校验结果
+- 已在根工作区提交 chore: validate archive first-screen notices（c6c8edc），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败
+- 本轮已为 scripts/root_archive_audit.py 新增 execution-state.json -> blocking.fallback / nextSteps[2] 与 VERIFICATION_RECORD.md 的阻塞续跑显式校验；首次执行发现 latestAudit、阻塞项 标记缺失且两处续跑文案不一致，修正后复跑 RESULT: PASS
+
+当前 nextSteps 快照：
+- nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
+- nextSteps[1]: 待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归
+- nextSteps[2]: 若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。
+
+结论：
+- 根工作区归档巡检现已覆盖“blocking 快照与续跑清单是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
+- 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险

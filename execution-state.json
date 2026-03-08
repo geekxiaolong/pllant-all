@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T06:00:00+08:00",
-  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] 的 fallback 路线补强 scripts/root_archive_audit.py，新增根仓库 origin 缺失显式校验：执行 git remote -v 与 git remote get-url origin，要求根仓库保持空 remote 列表且显式返回 error: No such remote 'origin'，并在 execution-state.json / VERIFICATION_RECORD.md 中同步保留 git remote -v、git remote get-url origin、No such remote、origin、recentCommits、git rev-parse HEAD 与 RESULT: PASS 标记；首次执行 python3 scripts/root_archive_audit.py 命中 root remote consistency issues: 8、verification record consistency issues: 1，回写 execution-state.json、VERIFICATION_RECORD.md、README.md、START_HERE.md、ROOT_ARCHIVE_MANIFEST.md、THREE-APP-SPLIT-STATUS.md 后复跑确认 root remote consistency issues: 0、verification record consistency issues: 0，RESULT: PASS。",
+  "updatedAt": "2026-03-09T06:11:00+08:00",
+  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] 的 fallback 路线补强 scripts/root_archive_audit.py，新增 blocking.point / blocking.tried / nextSteps 的跨文件显式校验：要求 execution-state.json 与 VERIFICATION_RECORD.md 同步保留 blocking.point、blocking.tried、nextSteps、recentCommits、git rev-parse HEAD、git remote -v、git remote get-url origin、No such remote、origin、RESULT: PASS 标记；首次执行 python3 scripts/root_archive_audit.py 命中 blocking snapshot consistency issues: 5、verification record consistency issues: 1，并清理 scripts/__pycache__ 误报后回写 execution-state.json、VERIFICATION_RECORD.md、README.md、START_HERE.md、ROOT_ARCHIVE_MANIFEST.md、THREE-APP-SPLIT-STATUS.md，再次复跑确认 missing README dirs: 0、blocking snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -178,7 +178,7 @@
     "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   ],
   "latestAudit": {
-    "timestamp": "2026-03-09T06:00:00+08:00",
+    "timestamp": "2026-03-09T06:11:00+08:00",
     "command": "python3 scripts/root_archive_audit.py",
     "result": "PASS",
     "summary": {
@@ -198,6 +198,7 @@
       "doc timestamp issues": 0,
       "recent commit consistency issues": 0,
       "root remote consistency issues": 0,
+      "blocking snapshot consistency issues": 0,
       "verification record consistency issues": 0
     }
   }

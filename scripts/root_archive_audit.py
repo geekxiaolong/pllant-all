@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-EXCLUDED_NAMES = {'.git', 'node_modules', 'heart-plant', 'heart-plant-admin', 'heart-plant-api'}
+EXCLUDED_NAMES = {'.git', '__pycache__', 'node_modules', 'heart-plant', 'heart-plant-admin', 'heart-plant-api'}
 MANIFEST = ROOT / 'ROOT_ARCHIVE_MANIFEST.md'
 EXECUTION_STATE = ROOT / 'execution-state.json'
 VERIFICATION_RECORD = ROOT / 'VERIFICATION_RECORD.md'
@@ -457,6 +457,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'doc timestamp issues',
     'recent commit consistency issues',
     'root remote consistency issues',
+    'blocking snapshot consistency issues',
     'verification record consistency issues',
 )
 
@@ -522,6 +523,23 @@ VERIFICATION_RECORD_ROOT_REMOTE_MARKERS = (
     'RESULT: PASS',
 )
 
+
+
+BLOCKING_SNAPSHOT_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.point', 'blocking.tried', 'nextSteps', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.point', 'blocking.tried', 'nextSteps', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING = '### 28. blocking 快照与续跑清单显式校验'
+VERIFICATION_RECORD_BLOCKING_SNAPSHOT_MARKERS = (
+    'blocking.point',
+    'blocking.tried',
+    'nextSteps',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    '测试账号',
+    'origin',
+    'RESULT: PASS',
+)
 
 def should_skip(path: Path) -> bool:
     return any(part in EXCLUDED_NAMES for part in path.parts)
@@ -1044,6 +1062,69 @@ def root_remote_consistency_gaps() -> list[str]:
     return gaps
 
 
+
+def blocking_snapshot_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    current_step = state.get('currentStep', '')
+    for marker in BLOCKING_SNAPSHOT_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing blocking snapshot marker :: {marker}')
+
+    for marker in BLOCKING_SNAPSHOT_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing blocking snapshot marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing blocking snapshot section :: '
+            f'{VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_BLOCKING_SNAPSHOT_MARKERS:
+            if marker not in section_text:
+                gaps.append(f'VERIFICATION_RECORD blocking snapshot marker missing :: {marker}')
+
+    blocking = state.get('blocking', {})
+    point = blocking.get('point', '')
+    tried = blocking.get('tried')
+    next_steps = state.get('nextSteps')
+
+    required_point_markers = ('SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin')
+    for marker in required_point_markers:
+        if marker not in point:
+            gaps.append(f'execution-state blocking.point missing marker :: {marker}')
+        if section_text and marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking snapshot section missing point marker :: {marker}')
+
+    if not isinstance(tried, list) or not tried:
+        gaps.append('execution-state blocking.tried missing or empty')
+    else:
+        recent_slice = tried[-3:]
+        for item in recent_slice:
+            if not isinstance(item, str) or not item.strip():
+                gaps.append('execution-state blocking.tried contains blank item')
+                continue
+            if section_text and item not in section_text:
+                gaps.append(f'VERIFICATION_RECORD blocking snapshot section missing tried item :: {item}')
+
+    if not isinstance(next_steps, list) or len(next_steps) < 3:
+        gaps.append('execution-state nextSteps missing blocking snapshot coverage')
+    else:
+        for marker in ('SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'execution-state.json', 'VERIFICATION_RECORD.md'):
+            if marker not in next_steps[0] and marker not in next_steps[1] and marker not in next_steps[2]:
+                gaps.append(f'execution-state nextSteps missing marker across continuation plan :: {marker}')
+        if section_text:
+            for index, step in enumerate(next_steps[:3]):
+                if step not in section_text:
+                    gaps.append(f'VERIFICATION_RECORD blocking snapshot section missing nextSteps[{index}] entry')
+
+    return gaps
+
+
 def recent_commit_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1194,6 +1275,7 @@ def main() -> int:
     blocker_consistency_issues = blocker_consistency_gaps()
     recent_commit_issues = recent_commit_consistency_gaps()
     root_remote_issues = root_remote_consistency_gaps()
+    blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1221,6 +1303,7 @@ def main() -> int:
         'doc timestamp issues': len(doc_timestamp_issues),
         'recent commit consistency issues': len(recent_commit_issues),
         'root remote consistency issues': len(root_remote_issues),
+        'blocking snapshot consistency issues': len(blocking_snapshot_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
@@ -1276,6 +1359,9 @@ def main() -> int:
     if root_remote_issues:
         print('\n[root remote consistency issues]')
         print('\n'.join(root_remote_issues))
+    if blocking_snapshot_issues:
+        print('\n[blocking snapshot consistency issues]')
+        print('\n'.join(blocking_snapshot_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -1296,6 +1382,7 @@ def main() -> int:
         or doc_timestamp_issues
         or recent_commit_issues
         or root_remote_issues
+        or blocking_snapshot_issues
         or verification_record_issues
     )
     if failed:
