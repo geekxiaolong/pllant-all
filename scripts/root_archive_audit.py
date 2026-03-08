@@ -453,8 +453,16 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'retained baseline issues',
     'doc reference issues',
     'blocker consistency issues',
+    'doc timestamp issues',
     'verification record consistency issues',
 )
+
+DOC_TIMESTAMP_REQUIREMENTS = {
+    'README.md': 'execution-state.json',
+    'START_HERE.md': 'execution-state.json',
+    'ROOT_ARCHIVE_MANIFEST.md': 'execution-state.json',
+    'THREE-APP-SPLIT-STATUS.md': 'execution-state.json',
+}
 
 
 def should_skip(path: Path) -> bool:
@@ -755,6 +763,30 @@ def blocker_consistency_gaps() -> list[str]:
     return gaps
 
 
+def doc_timestamp_gaps(state_stamp: str) -> list[str]:
+    gaps: list[str] = []
+    if not state_stamp:
+        return ['execution-state updatedAt missing/invalid; cannot validate doc timestamps']
+
+    for rel, source in sorted(DOC_TIMESTAMP_REQUIREMENTS.items()):
+        path = ROOT / rel
+        if not path.exists():
+            gaps.append(f'doc timestamp source missing on disk :: {rel}')
+            continue
+        text = path.read_text(encoding='utf-8', errors='ignore')
+        match = VERIFICATION_TIMESTAMP_RE.search(text)
+        if not match:
+            gaps.append(f'doc timestamp missing :: {rel} -> 更新时间')
+            continue
+        doc_stamp = match.group('stamp')
+        if doc_stamp != state_stamp:
+            gaps.append(
+                'doc timestamp mismatch :: '
+                f'{rel}={doc_stamp} vs {source}={state_stamp}'
+            )
+    return gaps
+
+
 def verification_record_summary_section_gaps(
     verification_text: str,
     latest_audit: dict,
@@ -909,6 +941,14 @@ def main() -> int:
     doc_reference_issues = doc_reference_gaps()
     blocker_consistency_issues = blocker_consistency_gaps()
 
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    updated_at = state.get('updatedAt', '')
+    try:
+        state_stamp = datetime.fromisoformat(updated_at).strftime('%Y-%m-%d %H:%M')
+    except ValueError:
+        state_stamp = ''
+    doc_timestamp_issues = doc_timestamp_gaps(state_stamp)
+
     summary_counts = {
         'top-level entries checked': len(entries),
         'missing README dirs': len(missing_readmes),
@@ -923,6 +963,7 @@ def main() -> int:
         'retained baseline issues': len(retained_issues),
         'doc reference issues': len(doc_reference_issues),
         'blocker consistency issues': len(blocker_consistency_issues),
+        'doc timestamp issues': len(doc_timestamp_issues),
         'verification record consistency issues': 0,
     }
     verification_record_issues = verification_record_consistency_gaps(summary_counts)
@@ -969,6 +1010,9 @@ def main() -> int:
     if blocker_consistency_issues:
         print('\n[blocker consistency issues]')
         print('\n'.join(blocker_consistency_issues))
+    if doc_timestamp_issues:
+        print('\n[doc timestamp issues]')
+        print('\n'.join(doc_timestamp_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -986,6 +1030,7 @@ def main() -> int:
         or retained_issues
         or doc_reference_issues
         or blocker_consistency_issues
+        or doc_timestamp_issues
         or verification_record_issues
     )
     if failed:

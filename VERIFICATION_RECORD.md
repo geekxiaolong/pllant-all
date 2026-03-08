@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 05:20 (Asia/Shanghai)
+更新时间：2026-03-09 05:29 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -586,7 +586,7 @@
    - `RESULT: PASS`
 
 最新审计摘要：
-- timestamp: 2026-03-09 05:20
+- timestamp: 2026-03-09 05:29
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -602,6 +602,7 @@
 - retained baseline issues: 0
 - doc reference issues: 0
 - blocker consistency issues: 0
+- doc timestamp issues: 0
 - verification record consistency issues: 0
 
 结论：
@@ -623,7 +624,7 @@
      - `VERIFICATION_RECORD.md` 缺少 `- timestamp: 2026-03-09 05:10`
    - 输出 `RESULT: FAIL`
 2. 修正方式：
-   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:20`
+   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:29`
    - 同步回写 `execution-state.json -> updatedAt`、`currentStep` 与 `latestAudit.timestamp`
 3. 修正后复跑 `python3 scripts/root_archive_audit.py`
    - `verification record consistency issues: 0`
@@ -633,3 +634,33 @@
 - 根工作区归档巡检已从“摘要项一致”进一步提升到“摘要时间戳也必须显式一致”
 - 后续若 cron 只更新状态文件、不补齐验证记录中的摘要时间戳，脚本会直接 FAIL，进一步降低审计记录漂移风险
 
+### 24. 主导航文档更新时间显式校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把根工作区主导航文档的 `更新时间` 也纳入显式基线校验，避免入口文档长期停留在旧时间戳而与当前状态源脱节。
+
+新增校验项：
+- `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 必须显式包含 `更新时间：YYYY-MM-DD HH:MM (Asia/Shanghai)`
+- `scripts/root_archive_audit.py` 会将这些文档的时间戳与 `execution-state.json -> updatedAt` 做分钟级对照
+- 若主导航文档未随最新状态同步更新时间，脚本将报出 `doc timestamp issues` 并直接 `RESULT: FAIL`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `doc timestamp issues: 4`
+   - 具体缺口：
+     - `README.md` 仍为 `2026-03-09 00:55`
+     - `START_HERE.md` 仍为 `2026-03-09 00:55`
+     - `ROOT_ARCHIVE_MANIFEST.md` 仍为 `2026-03-09 03:24`
+     - `THREE-APP-SPLIT-STATUS.md` 仍为 `2026-03-09 01:00`
+   - 同时因 `execution-state.json -> latestAudit.summary` 尚未纳入该新计数，额外命中 `verification record consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 将上述 4 份主导航/状态摘要文档的 `更新时间` 全部同步为 `2026-03-09 05:29`
+   - 同步回写 `execution-state.json -> updatedAt`、`currentStep` 与 `latestAudit.summary.doc timestamp issues`
+   - 补齐本节与“最近一轮归档审计摘要（机读对照）”中的新统计项
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `doc timestamp issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“主导航文档更新时间是否仍与唯一状态源同步”这一层约束
+- 后续若 cron 只更新 `execution-state.json` / `VERIFICATION_RECORD.md`，却漏掉 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md` 的时间戳，脚本会直接 FAIL，进一步降低入口文档陈旧带来的认知漂移风险
