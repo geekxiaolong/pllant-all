@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:34 (Asia/Shanghai)
+更新时间：2026-03-09 07:36 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:34
+- timestamp: 2026-03-09 07:36
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -722,10 +722,10 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: latest local HEAD f37b57828188d13919ba1133c9286ebcb3f910ec (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): f37b57828188d13919ba1133c9286ebcb3f910ec, 36870e759fe32763c412df87f2ad29ec21a11479
-- workspace-root HEAD~1: f37b57828188d13919ba1133c9286ebcb3f910ec
-- workspace-root HEAD~2: 36870e759fe32763c412df87f2ad29ec21a11479
+- workspace-root: latest local HEAD 0487393b9e2dbce893a7a0e592982f1974f089bc (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 0487393b9e2dbce893a7a0e592982f1974f089bc, f37b5784ab69f3d8be89d857a0496e2fb648d0e8
+- workspace-root HEAD~1: 0487393b9e2dbce893a7a0e592982f1974f089bc
+- workspace-root HEAD~2: f37b5784ab69f3d8be89d857a0496e2fb648d0e8
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -810,9 +810,9 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
-- 本轮已为 scripts/root_archive_audit.py 新增 currentStep / fallback route 显式校验，要求 execution-state.json -> currentStep、blocking.fallback、nextSteps[2] 与 VERIFICATION_RECORD.md 第 35 节同步落盘 fallback route 语义；提交后复跑 python3 scripts/root_archive_audit.py 确认 fallback route consistency issues: 0，RESULT: PASS
 - 本轮已同步修正 VERIFICATION_RECORD.md 第 22/26/28/31/35 节的 pre-sync 提交链、blocking.tried 最近项与 fallback route 摘要时间戳；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、fallback route consistency issues: 0，RESULT: PASS
 - 本轮已把 execution-state.json -> blocking.tried 最近 3 条与 VERIFICATION_RECORD.md 第 28 节重新对齐；提交后复跑 python3 scripts/root_archive_audit.py 确认 blocking snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- 本轮已将 execution-state.json -> recentCommits.workspace-root、currentStep 与 VERIFICATION_RECORD.md 第 26/31 节统一改为准确的 40 位 pre-sync 提交哈希；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0，RESULT: PASS
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
@@ -935,7 +935,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: f37b57828188d13919ba1133c9286ebcb3f910ec
+- workspace-root HEAD~1 anchor: 0487393b9e2dbce893a7a0e592982f1974f089bc
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
