@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T01:12:00+08:00",
-  "currentStep": "已继续清理根工作区剩余历史流媒体/快速部署文档，统一补充三端分离归档说明并完成 grep/head 校验；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归",
+  "updatedAt": "2026-03-09T01:23:00+08:00",
+  "currentStep": "已继续清理根工作区剩余历史修复/视频/macOS 启动文档，完成 API_FIX_SUMMARY、FIX_SUMMARY、TIMELINE_FIX_SUMMARY、VIDEO_STATUS_GUIDE、MACOS_QUICKSTART 的三端分离归档改写与 head/grep 校验；下一优先项仍是等待 SUPABASE_SERVICE_ROLE_KEY 执行真实写库/存储联调，其次等待测试账号继续登录后页面截图回归",
   "completed": [
     "A1",
     "A2",
@@ -37,7 +37,7 @@
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
     "heart-plant-admin": "2231faab1f32cc67c422ea54609a62f93d9af917",
     "heart-plant-api": "0daddee92a344d37bd7a8fe29159dd725669d646",
-    "workspace-root": "038f4c01c359e6a74d9da29571bf19765cbf3e8a"
+    "workspace-root": "a4879bf7c918bf0d113b890044a7b69e0d20d30a"
   },
   "blocking": {
     "status": "partial",
@@ -74,7 +74,9 @@
       "本轮已将 THREE-APP-SPLIT-STATUS.md、GITHUB_UPLOAD_GUIDE.md、GITHUB_SETUP.md、UPLOAD_TO_GITHUB.md、上传到GitHub说明.md、FILES_READY_FOR_GITHUB.md 统一改为历史归档说明，避免继续误导到根目录整体 git init/push 流程",
       "已使用 grep 复核归档关键字与根目录/子仓库职责说明",
       "本轮已为 STREAMING_README.md、WEBRTC_SETUP.md、WEBRTC_DEBUG_GUIDE.md、mediamtx-setup.md、STREAMING_QUICKSTART.md、QUICK_DEPLOY.md 追加三端分离归档说明",
-      "已执行 head 与 grep 校验，确认 6 份历史流媒体/部署文档均已指回 README.md / START_HERE.md / THREE-APP-DEPLOYMENT.md"
+      "已执行 head 与 grep 校验，确认 6 份历史流媒体/部署文档均已指回 README.md / START_HERE.md / THREE-APP-DEPLOYMENT.md",
+      "本轮已将 API_FIX_SUMMARY.md、FIX_SUMMARY.md、TIMELINE_FIX_SUMMARY.md、VIDEO_STATUS_GUIDE.md、MACOS_QUICKSTART.md 改写为历史归档说明，并通过 head/grep 校验三端子仓库与主导航链接",
+      "已在根工作区提交 docs: archive remaining legacy root guides（a4879bf），随后再次尝试 git push origin HEAD，仍因未配置 origin 失败"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
