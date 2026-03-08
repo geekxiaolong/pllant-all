@@ -28,6 +28,7 @@
 - `THREE-APP-DEPLOYMENT.md`：三端分离后的部署说明
 - `THREE-APP-SPLIT-STATUS.md`：历史状态摘要（只作归档索引）
 - `.gitignore`：根工作区忽略规则，避免误把三端子仓库再次纳入根仓库提交
+- `package-lock.json`：根工作区最小归档锁文件，避免误保留旧单体依赖树
 - `.vscode/settings.json`：仅用于将根目录显示为“历史归档工作区”，降低误操作风险
 
 ## 二、当前仍保留但仅作为历史资料参考的文件
@@ -48,6 +49,7 @@
 - `QUICK_DEPLOY.md`
 - `MACOS_QUICKSTART.md`
 - `API_FIX_SUMMARY.md`
+- `ATTRIBUTIONS.md`
 - `FIX_SUMMARY.md`
 - `TIMELINE_FIX_SUMMARY.md`
 - `VIDEO_STATUS_GUIDE.md`
@@ -64,6 +66,9 @@
 - `git-push.sh`
 - `quick-upload.sh`
 - `quick-upload.bat`
+- `mediamtx-config.yml`
+- `mediamtx-config-fixed.yml`
+- `mediamtx-minimal.yml`
 - `mediamtx-quickstart.sh`
 - `mediamtx-quickstart.bat`
 - `setup-mediamtx-macos.sh`

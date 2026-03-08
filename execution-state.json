@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T03:25:00+08:00",
-  "currentStep": "本轮已新增 ROOT_ARCHIVE_MANIFEST.md 汇总根工作区残余资产清单，并在 README.md、START_HERE.md 中补充主导航链接；同时复核根工作区（排除三端子仓库）目录树仍无缺 README 的历史目录。",
+  "updatedAt": "2026-03-09T03:34:00+08:00",
+  "currentStep": "本轮已基于根目录实盘文件列表补齐 ROOT_ARCHIVE_MANIFEST.md 的遗漏项（package-lock.json、ATTRIBUTIONS.md、mediamtx-config*.yml），并复核根工作区（排除三端子仓库）仍无缺 README 的历史目录且无未说明空目录。",
   "completed": [
     "A1",
     "A2",
@@ -140,7 +140,9 @@
       "已执行目录扫描与 grep 校验，确认根工作区（排除 .git、三端子仓库、node_modules）已无缺 README 的历史目录，新增 README 均命中 Archived root workspace / 历史归档标识",
       "已在根工作区提交 docs: add archive notes for remaining root source dirs（a5fe924）",
       "本轮已新增 ROOT_ARCHIVE_MANIFEST.md 汇总根工作区残余资产清单，并在 README.md、START_HERE.md 中接入主导航链接",
-      "已读取 ROOT_ARCHIVE_MANIFEST.md 并执行 grep + 目录扫描校验，确认主导航已接入且根工作区（排除 .git、三端子仓库、node_modules）仍无缺 README 的历史目录"
+      "已读取 ROOT_ARCHIVE_MANIFEST.md 并执行 grep + 目录扫描校验，确认主导航已接入且根工作区（排除 .git、三端子仓库、node_modules）仍无缺 README 的历史目录",
+      "本轮已基于顶层文件扫描补齐 ROOT_ARCHIVE_MANIFEST.md 中遗漏的 package-lock.json、ATTRIBUTIONS.md、mediamtx-config.yml、mediamtx-config-fixed.yml、mediamtx-minimal.yml",
+      "已执行顶层文件扫描、目录 README 扫描与空目录扫描，确认根工作区（排除 .git、三端子仓库、node_modules）无缺 README 的历史目录，且不存在未说明空目录残留"
     ],
     "fallback": "若短期无法补齐 SUPABASE_SERVICE_ROLE_KEY 与测试账号，则继续清理根工作区剩余历史单体文档与仓库说明；一旦补齐凭据，优先恢复真实写库/上传/签名 URL 联调，其次补做登录后页面截图回归"
   },
