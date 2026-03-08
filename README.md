@@ -21,6 +21,7 @@
 - 验证记录：`VERIFICATION_RECORD.md`
 - 三端拆分状态：`THREE-APP-SPLIT-STATUS.md`
 - 三端部署说明：`THREE-APP-DEPLOYMENT.md`
+- 根目录残余清单：`ROOT_ARCHIVE_MANIFEST.md`
 
 ### 三个子仓库
 - 用户前端：`heart-plant/`

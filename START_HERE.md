@@ -44,6 +44,7 @@ deno task serve
 ## 当前主文档
 
 - 根目录说明：`README.md`
+- 根目录残余清单：`ROOT_ARCHIVE_MANIFEST.md`
 - 三端部署：`THREE-APP-DEPLOYMENT.md`
 - 验证记录：`VERIFICATION_RECORD.md`
 - 进度状态：`execution-state.json`
