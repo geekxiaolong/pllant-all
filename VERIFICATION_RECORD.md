@@ -378,3 +378,39 @@
 结论：
 - 根工作区归档巡检现已覆盖“是否列入 manifest”与“是否列入正确段落”两层一致性约束
 - 后续即便 `ROOT_ARCHIVE_MANIFEST.md` 中出现分类漂移、段落误归类或列表解析回归，也能被脚本直接发现
+
+### 16. manifest 保留/归档分类与 audit targets 交叉覆盖校验
+本轮继续沿着 `execution-state.json -> nextSteps` 的 fallback 路线，进一步补强 `scripts/root_archive_audit.py`，让它检查 `ROOT_ARCHIVE_MANIFEST.md` 的“保留/归档分类”是否真的覆盖到了脚本当前正在抽检的 archive targets 基线，而不是只看 section 文本本身是否齐全。
+
+新增校验项：
+- 建立 manifest 分类条目 -> 实际 audit targets 的显式映射：
+  - 历史文档、历史脚本 / 守卫文件采用一对一映射
+  - 历史目录条目采用一对多映射，覆盖目录级 `README.md`（如 `src/README.md`、`src/app/README.md`、`src/imports/README.md`、`src/styles/README.md`）
+- 审计脚本现会额外检查：
+  - manifest archive 分类基线是否存在未映射项
+  - `ARCHIVE_TARGETS` 中是否存在未被 manifest 分类覆盖的审计目标
+  - 保留基线与 archive audit target 是否发生错误重叠
+  - manifest 分类映射出的目标文件是否真实存在于磁盘
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 新规则发现 5 处真实覆盖缺口：
+     - `THREE-APP-SPLIT-STATUS.md`
+     - `scripts/README.md`
+     - `src/app/README.md`
+     - `src/imports/README.md`
+     - `src/styles/README.md`
+   - 其中前两项暴露的是“audit targets 基线比 manifest archive 分类更宽”，后三项暴露的是 `src/` 分类仅覆盖了顶层 `src/README.md`，尚未把已存在的子目录归档 README 一并纳入映射
+   - 输出 `RESULT: FAIL`
+2. 调整脚本：
+   - 将 `THREE-APP-SPLIT-STATUS.md` 从 archive marker audit targets 中移除，保持其作为“保留但历史摘要文件”的单独角色，不再强制要求落入 archive 分类映射
+   - 将 `scripts/README.md` 从 archive marker audit targets 中移除，避免把活动脚本目录中的目录说明误判为 archive 分类项
+   - 将 `src/` 的 manifest 分类映射扩展为同时覆盖 `src/README.md`、`src/app/README.md`、`src/imports/README.md`、`src/styles/README.md`
+3. 二次执行 `python3 scripts/root_archive_audit.py`
+   - `manifest classification issues: 0`
+   - 其余检查项保持为 0
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已从“文件存在 / 标识存在 / section 正确”进一步提升到“manifest 分类是否真正覆盖 audit 基线”这一层
+- 后续若新增 archive targets 但忘记接入 manifest 分类映射，脚本会直接报错，减少根工作区归档基线持续漂移的风险

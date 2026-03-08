@@ -107,7 +107,6 @@ ARCHIVE_TARGETS = {
     'QUICK_DEPLOY.md',
     'STREAMING_QUICKSTART.md',
     'STREAMING_README.md',
-    'THREE-APP-SPLIT-STATUS.md',
     'TIMELINE_FIX_SUMMARY.md',
     'UPLOAD_TO_GITHUB.md',
     'VIDEO_STATUS_GUIDE.md',
@@ -137,7 +136,6 @@ ARCHIVE_TARGETS = {
     'guidelines/README.md',
     'LICENSE/README.md',
     'nginx/README.md',
-    'scripts/README.md',
     'src/README.md',
     'src/app/README.md',
     'src/imports/README.md',
@@ -222,6 +220,55 @@ MANIFEST_SECTION_EXPECTED = {
 
 MANIFEST_SECTION_ORDER = list(MANIFEST_SECTION_EXPECTED)
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
+
+ARCHIVE_CLASSIFICATION_TARGETS = {
+    'DEPLOYMENT.md': {'DEPLOYMENT.md'},
+    'DESIGN.md': {'DESIGN.md'},
+    'GITHUB_SETUP.md': {'GITHUB_SETUP.md'},
+    'GITHUB_UPLOAD_GUIDE.md': {'GITHUB_UPLOAD_GUIDE.md'},
+    'UPLOAD_TO_GITHUB.md': {'UPLOAD_TO_GITHUB.md'},
+    '上传到GitHub说明.md': {'上传到GitHub说明.md'},
+    'FILES_READY_FOR_GITHUB.md': {'FILES_READY_FOR_GITHUB.md'},
+    'QUICK_DEPLOY.md': {'QUICK_DEPLOY.md'},
+    'MACOS_QUICKSTART.md': {'MACOS_QUICKSTART.md'},
+    'API_FIX_SUMMARY.md': {'API_FIX_SUMMARY.md'},
+    'ATTRIBUTIONS.md': {'ATTRIBUTIONS.md'},
+    'FIX_SUMMARY.md': {'FIX_SUMMARY.md'},
+    'TIMELINE_FIX_SUMMARY.md': {'TIMELINE_FIX_SUMMARY.md'},
+    'VIDEO_STATUS_GUIDE.md': {'VIDEO_STATUS_GUIDE.md'},
+    'STREAMING_README.md': {'STREAMING_README.md'},
+    'STREAMING_QUICKSTART.md': {'STREAMING_QUICKSTART.md'},
+    'WEBRTC_SETUP.md': {'WEBRTC_SETUP.md'},
+    'WEBRTC_DEBUG_GUIDE.md': {'WEBRTC_DEBUG_GUIDE.md'},
+    'mediamtx-setup.md': {'mediamtx-setup.md'},
+    'deploy.sh': {'deploy.sh'},
+    'deploy-supabase.sh': {'deploy-supabase.sh'},
+    'git-init.sh': {'git-init.sh'},
+    'git-push.sh': {'git-push.sh'},
+    'quick-upload.sh': {'quick-upload.sh'},
+    'quick-upload.bat': {'quick-upload.bat'},
+    'mediamtx-config.yml': {'mediamtx-config.yml'},
+    'mediamtx-config-fixed.yml': {'mediamtx-config-fixed.yml'},
+    'mediamtx-minimal.yml': {'mediamtx-minimal.yml'},
+    'mediamtx-quickstart.sh': {'mediamtx-quickstart.sh'},
+    'mediamtx-quickstart.bat': {'mediamtx-quickstart.bat'},
+    'setup-mediamtx-macos.sh': {'setup-mediamtx-macos.sh'},
+    'start-mediamtx.sh': {'start-mediamtx.sh'},
+    'docker-compose.yml': {'docker-compose.yml'},
+    'index.html': {'index.html'},
+    'package.json': {'package.json'},
+    'postcss.config.mjs': {'postcss.config.mjs'},
+    'vite.config.ts': {'vite.config.ts'},
+    'src/': {'src/README.md', 'src/app/README.md', 'src/imports/README.md', 'src/styles/README.md'},
+    'supabase/': {'supabase/README.md', 'supabase/functions/README.md', 'supabase/functions/server/README.md'},
+    'stream-server/': {'stream-server/README.md'},
+    'nginx/': {'nginx/README.md'},
+    'guidelines/': {'guidelines/README.md'},
+    'utils/': {'utils/README.md', 'utils/supabase/README.md'},
+    'workflows/': {'workflows/README.md'},
+    'LICENSE/': {'LICENSE/README.md'},
+    '.vscode/': {'.vscode/README.md'},
+}
 
 
 def should_skip(path: Path) -> bool:
@@ -344,6 +391,47 @@ def manifest_section_gaps(manifest_text: str) -> list[str]:
     return gaps
 
 
+def manifest_classification_coverage_gaps() -> list[str]:
+    gaps: list[str] = []
+    retained = MANIFEST_SECTION_EXPECTED['## 一、当前仍应保留并持续维护的根目录文件']
+    archive_section_entries = set().union(
+        MANIFEST_SECTION_EXPECTED['### 2.1 历史文档'],
+        MANIFEST_SECTION_EXPECTED['### 2.2 历史脚本 / 历史入口守卫'],
+        MANIFEST_SECTION_EXPECTED['### 2.3 历史目录（目录内已有 README 归档说明）'],
+    )
+
+    overlap = sorted(retained & archive_section_entries)
+    for item in overlap:
+        gaps.append(f'classification overlap :: {item} appears in both retained and archive baselines')
+
+    uncovered_manifest_entries = sorted(archive_section_entries - set(ARCHIVE_CLASSIFICATION_TARGETS))
+    for item in uncovered_manifest_entries:
+        gaps.append(f'archive manifest baseline uncovered :: {item}')
+
+    classified_archive_targets = set().union(*ARCHIVE_CLASSIFICATION_TARGETS.values())
+    missing_archive_target_coverage = sorted(ARCHIVE_TARGETS - classified_archive_targets)
+    for item in missing_archive_target_coverage:
+        gaps.append(f'archive audit target not mapped from manifest classification :: {item}')
+
+    unexpected_archive_target_mapping = sorted(classified_archive_targets - ARCHIVE_TARGETS)
+    for item in unexpected_archive_target_mapping:
+        gaps.append(f'archive classification mapped non-audit target :: {item}')
+
+    retained_misclassified = sorted(retained & classified_archive_targets)
+    for item in retained_misclassified:
+        gaps.append(f'retained baseline collides with archive audit target :: {item}')
+
+    for manifest_item, targets in sorted(ARCHIVE_CLASSIFICATION_TARGETS.items()):
+        for target in sorted(targets):
+            if target not in ARCHIVE_TARGETS:
+                continue
+            path = ROOT / target
+            if not path.exists():
+                gaps.append(f'archive classification target missing on disk :: {manifest_item} -> {target}')
+
+    return gaps
+
+
 def main() -> int:
     manifest_text = MANIFEST.read_text(encoding='utf-8')
     entries = top_level_entries()
@@ -354,6 +442,7 @@ def main() -> int:
     archive_gaps = archive_marker_gaps()
     navigation_gaps = navigation_marker_gaps()
     manifest_section_issues = manifest_section_gaps(manifest_text)
+    manifest_classification_issues = manifest_classification_coverage_gaps()
 
     print('== Root archive audit ==')
     print(f'root: {ROOT}')
@@ -365,6 +454,7 @@ def main() -> int:
     print(f'archive marker gaps: {len(archive_gaps)}')
     print(f'navigation marker gaps: {len(navigation_gaps)}')
     print(f'manifest section issues: {len(manifest_section_issues)}')
+    print(f'manifest classification issues: {len(manifest_classification_issues)}')
 
     if missing_readmes:
         print('\n[missing README dirs]')
@@ -387,6 +477,9 @@ def main() -> int:
     if manifest_section_issues:
         print('\n[manifest section issues]')
         print('\n'.join(manifest_section_issues))
+    if manifest_classification_issues:
+        print('\n[manifest classification issues]')
+        print('\n'.join(manifest_classification_issues))
 
     failed = bool(
         missing_readmes
@@ -396,6 +489,7 @@ def main() -> int:
         or archive_gaps
         or navigation_gaps
         or manifest_section_issues
+        or manifest_classification_issues
     )
     if failed:
         print('\nRESULT: FAIL')

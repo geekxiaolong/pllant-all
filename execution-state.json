@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T04:06:00+08:00",
-  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 分类段落一致性校验；首次执行暴露 section 解析范围过宽导致误报 execution-state.json，修正列表项提取与段落截断逻辑后复跑 RESULT: PASS。",
+  "updatedAt": "2026-03-09T04:15:00+08:00",
+  "currentStep": "本轮继续补强 scripts/root_archive_audit.py，新增 ROOT_ARCHIVE_MANIFEST.md 保留/归档分类与 ARCHIVE_TARGETS 基线的交叉覆盖校验；首次执行暴露 THREE-APP-SPLIT-STATUS.md、scripts/README.md 与 src 子目录 README 映射缺口，收敛 archive targets 与 src/ 分类映射后复跑 RESULT: PASS。",
   "completed": [
     "A1",
     "A2",
@@ -29,10 +29,10 @@
     "C8",
     "D1",
     "D2",
+    "D3",
     "D4",
     "D5",
-    "D6",
-    "D3"
+    "D6"
   ],
   "recentCommits": {
     "heart-plant": "cbcf3e49d4c79c33ed745fc54c0a8cd73973ca3e",
@@ -153,13 +153,14 @@
       "已更新 VERIFICATION_RECORD.md 记录本轮 manifest 分类一致性回归与脚本修复过程",
       "已在根工作区提交 chore: validate root archive manifest sections（169b1b4）",
       "再次尝试 git push origin HEAD 失败，错误为 origin does not appear to be a git repository，确认根工作区仍未配置可用 origin 远端",
-      "已在根工作区提交 docs: record manifest section audit progress（2daec71）"
+      "已在根工作区提交 docs: record manifest section audit progress（2daec71）",
+      "本轮已为 scripts/root_archive_audit.py 新增 manifest 保留/归档分类与 ARCHIVE_TARGETS 基线交叉覆盖校验，首次发现 5 处映射缺口，收敛基线与 src/ 分类映射后复跑 RESULT: PASS"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化（例如补充归档标识抽检、README/manifest 一致性检查），并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
   "nextSteps": [
     "待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调",
     "待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归",
-    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 manifest 保留/归档分类与 archive targets 基线的交叉覆盖校验）"
+    "如仍缺少凭据，继续增强根工作区归档巡检（下一步优先补充 manifest 保留基线与 TOP_LEVEL_EXPECTED/活动目录说明的一致性校验）"
   ]
 }
