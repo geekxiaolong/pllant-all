@@ -1,7 +1,7 @@
 {
   "project": "heart-plant three-way split",
-  "updatedAt": "2026-03-09T06:25:00+08:00",
-  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] 的 fallback 路线补强 scripts/root_archive_audit.py，新增 git status --short / ?? EXECUTION_PLAN.md / clean tracked files 的根工作区显式校验；修正 execution-state.json 新增 blocking.tried 后与 VERIFICATION_RECORD.md 第 28 节未同步导致的 blocking snapshot consistency issues: 1 / verification record consistency issues: 2，再次复跑 python3 scripts/root_archive_audit.py 目标确认 missing README dirs: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS；已在根工作区提交 chore: validate root workspace git status snapshot（a1707e5）与 docs: sync workspace status audit result（81cafb4），多次尝试 git push origin HEAD 仍因 origin does not appear to be a git repository 失败；execution-state.json 与 VERIFICATION_RECORD.md 继续显式同步 git status --short、?? EXECUTION_PLAN.md、clean tracked files、recentCommits、git rev-parse HEAD、git remote -v、git remote get-url origin、No such remote、origin、blocking.point、blocking.tried、nextSteps、RESULT: PASS 标记。",
+  "updatedAt": "2026-03-09T06:32:00+08:00",
+  "currentStep": "本轮继续沿 execution-state.json -> nextSteps[2] 的 fallback 路线补强 scripts/root_archive_audit.py，新增 workspace-root pre-sync recentCommits 提交窗口显式校验；将 execution-state.json -> recentCommits.workspace-root 从漂移的 a1707e5 修正为 HEAD~1=8962388a66ba186a903f51f096186ab9a253e8c2，并在 VERIFICATION_RECORD.md 第 26/30 节显式同步 workspace-root recent local heads (pre-sync latest 2)、git rev-parse HEAD、git status --short、?? EXECUTION_PLAN.md、clean tracked files、blocking.point、blocking.tried、nextSteps、RESULT: PASS；复跑 python3 scripts/root_archive_audit.py 目标确认 recent commit consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS；已在根工作区提交 chore: validate root workspace head sync window（8962388），后续提交 docs: sync root workspace head window audit state，并再次尝试 git push origin HEAD 预期仍因 origin does not appear to be a git repository 失败。",
   "completed": [
     "A1",
     "A2",
@@ -38,7 +38,7 @@
     "heart-plant": "cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4",
     "heart-plant-admin": "2231faa33581aa68bbbb5ce10c46c4f50e5eda89",
     "heart-plant-api": "0daddeeeb5243951f52591c9968720b88347be83",
-    "workspace-root": "latest local HEAD a1707e5b8cc1fcb62f60d5e1693165dbd7e25097 (see VERIFICATION_RECORD.md recentCommits section)"
+    "workspace-root": "latest local HEAD 8962388a66ba186a903f51f096186ab9a253e8c2 (see VERIFICATION_RECORD.md recentCommits section)"
   },
   "blocking": {
     "status": "partial",
@@ -163,7 +163,8 @@
       "已在根工作区提交 chore: validate archive first-screen notices（c6c8edc），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
       "本轮已为 scripts/root_archive_audit.py 新增 execution-state.json -> blocking.fallback / nextSteps[2] 与 VERIFICATION_RECORD.md 的阻塞续跑显式校验；首次执行发现 latestAudit、阻塞项 标记缺失且两处续跑文案不一致，修正后复跑 RESULT: PASS",
       "已在根工作区提交 chore: validate blocking snapshot sync（fc72436），随后再次尝试 git push origin HEAD，仍因 origin does not appear to be a git repository 失败",
-      "本轮已为 scripts/root_archive_audit.py 新增 git status --short / ?? EXECUTION_PLAN.md / clean tracked files 的根工作区显式校验；已执行 python3 scripts/root_archive_audit.py 复跑确认 workspace status consistency issues: 0，RESULT: PASS"
+      "本轮已为 scripts/root_archive_audit.py 新增 git status --short / ?? EXECUTION_PLAN.md / clean tracked files 的根工作区显式校验；已执行 python3 scripts/root_archive_audit.py 复跑确认 workspace status consistency issues: 0，RESULT: PASS",
+      "本轮已为 scripts/root_archive_audit.py 新增 workspace-root recentCommits pre-sync 提交窗口校验，要求 execution-state.json -> recentCommits.workspace-root 对齐 HEAD~1，且 VERIFICATION_RECORD.md 第 26 节显式记录 workspace-root recent local heads (pre-sync latest 2)；首次执行命中 recent commit consistency issues: 2 与 workspace status consistency issues: 1，修正后复跑 RESULT: PASS"
     ],
     "fallback": "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   },
@@ -173,7 +174,7 @@
     "若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。"
   ],
   "latestAudit": {
-    "timestamp": "2026-03-09T06:25:00+08:00",
+    "timestamp": "2026-03-09T06:32:00+08:00",
     "command": "python3 scripts/root_archive_audit.py",
     "result": "PASS",
     "summary": {

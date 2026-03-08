@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 06:25 (Asia/Shanghai)
+更新时间：2026-03-09 06:32 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 06:25
+- timestamp: 2026-03-09 06:32
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -717,7 +717,8 @@
 - heart-plant: cbcf3e4fcb98d3ca1e164c27a5f2f1c94f474cd4
 - heart-plant-admin: 2231faa33581aa68bbbb5ce10c46c4f50e5eda89
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
-- workspace-root: a1707e5b8cc1fcb62f60d5e1693165dbd7e25097
+- workspace-root: 8962388a66ba186a903f51f096186ab9a253e8c2
+- workspace-root recent local heads (pre-sync latest 2): 8962388a66ba186a903f51f096186ab9a253e8c2, 11f59f3d99c31fb9d1d152aae1ad37099290a43f
 
 结论：
 - 根工作区归档巡检现已覆盖“execution-state.json 中记录的 recentCommits 是否仍与三端/根仓库真实 HEAD 一致”这一层约束
@@ -856,3 +857,35 @@
 结论：
 - 根工作区归档巡检现已覆盖“工作区是否真的只剩 `EXECUTION_PLAN.md` 未跟踪、tracked files 是否保持干净”这一层约束
 - 后续若 cron 只更新文字进度、却把根仓库留在脏状态，脚本会直接 FAIL，进一步降低续跑记录与真实工作区状态漂移风险
+
+### 30. workspace-root recentCommits pre-sync 窗口显式校验
+本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把 `workspace-root` 的 recentCommits 约束从“只写 latest local HEAD 标记”升级为“必须显式对齐 docs/state sync 提交前的根仓库提交窗口”，避免根工作区连续多次 docs sync 后，`execution-state.json` 仍停留在更早的归档提交而脚本未报错。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 除 `git rev-parse HEAD` 外，还会对根仓库执行 `git log -3 --format=%H`
+- `execution-state.json -> recentCommits.workspace-root` 必须显式标注 `latest local HEAD`，且其记录值必须等于当前根仓库 `HEAD~1`（即 docs/state sync 提交前一跳的功能/脚本提交）
+- `VERIFICATION_RECORD.md -> ### 26. recentCommits 与仓库 HEAD 显式校验` 必须新增 `workspace-root recent local heads (pre-sync latest 2)` 明细，并与当前根仓库 `HEAD~1`、`HEAD~2` 对齐
+- 若 `workspace-root` 记录漂到 `HEAD~2` 之后，或 `VERIFICATION_RECORD.md` 未同步 pre-sync 窗口，脚本会直接命中 `recent commit consistency issues`
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `recent commit consistency issues: 2`
+   - 具体缺口：
+     - `execution-state.json -> recentCommits.workspace-root` 仍停留在 `a1707e5...`，未对齐当前根仓库 `HEAD~1 = 8962388a66ba186a903f51f096186ab9a253e8c2`
+     - `VERIFICATION_RECORD.md -> ### 26` 尚未显式记录 `workspace-root recent local heads (pre-sync latest 2)`
+   - 同时因正在修改 `scripts/root_archive_audit.py`，首次回归阶段根工作区 tracked files 仍为 dirty，额外命中 `workspace status consistency issues: 1`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 补强 `scripts/root_archive_audit.py`，新增 `git_recent_heads()` 与 `workspace-root` pre-sync 提交窗口校验
+   - 同步回写 `execution-state.json -> recentCommits.workspace-root` 为 `latest local HEAD 8962388a66ba186a903f51f096186ab9a253e8c2 (see VERIFICATION_RECORD.md recentCommits section)`
+   - 在 `VERIFICATION_RECORD.md -> ### 26` 补写 `workspace-root recent local heads (pre-sync latest 2): 8962388a66ba186a903f51f096186ab9a253e8c2, 11f59f3d99c31fb9d1d152aae1ad37099290a43f`
+   - 同步更新 `execution-state.json -> updatedAt`、`currentStep`、`latestAudit.summary` 与主导航文档 `更新时间`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `recent commit consistency issues: 0`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“`workspace-root` 的 recentCommits 是否仍对齐最近一轮 docs/state sync 之前的真实提交窗口”这一层约束
+- 后续若 cron 连续做了多轮文档同步、却没有同步推进 `execution-state.json -> recentCommits.workspace-root` 与 `VERIFICATION_RECORD.md -> pre-sync latest 2`，脚本会直接 FAIL，进一步降低根仓库提交指针漂移风险
