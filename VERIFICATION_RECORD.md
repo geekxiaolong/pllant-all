@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 10:03 (Asia/Shanghai)
+更新时间：2026-03-09 10:09 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 10:03
+- timestamp: 2026-03-09 10:09
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -715,9 +715,9 @@
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
 - workspace-root: latest local HEAD adeebe2c65601e7d74c8b566de2af1d9537921f0 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): adeebe2c65601e7d74c8b566de2af1d9537921f0, e03c9dec5bc2f26f00701595cf9692d521c1825f
-- workspace-root HEAD~1: adeebe2c65601e7d74c8b566de2af1d9537921f0
-- workspace-root HEAD~2: e03c9dec5bc2f26f00701595cf9692d521c1825f
+- workspace-root recent local heads (pre-sync latest 2): dfe8199a57b637812d2790bc046209cfe3ff8147, adeebe2c65601e7d74c8b566de2af1d9537921f0
+- workspace-root HEAD~1: dfe8199a57b637812d2790bc046209cfe3ff8147
+- workspace-root HEAD~2: adeebe2c65601e7d74c8b566de2af1d9537921f0
 - workspace-root pre-sync command: git log -3 --format=%H
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无短 hash 歧义
 - RESULT: PASS
@@ -776,8 +776,8 @@
 - 同时将 `blocking snapshot consistency issues` 纳入最近一轮归档审计摘要，避免只修正文案不修正机读统计
 
 当前 blocking.point 快照：
-- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=adeebe2c65601e7d74c8b566de2af1d9537921f0、HEAD~2=e03c9dec5bc2f26f00701595cf9692d521c1825f；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
-- workspace-root pre-sync anchors exact snapshot: HEAD~1=adeebe2c65601e7d74c8b566de2af1d9537921f0、HEAD~2=e03c9dec5bc2f26f00701595cf9692d521c1825f
+- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=dfe8199a57b637812d2790bc046209cfe3ff8147、HEAD~2=adeebe2c65601e7d74c8b566de2af1d9537921f0；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- workspace-root pre-sync anchors exact snapshot: HEAD~1=dfe8199a57b637812d2790bc046209cfe3ff8147、HEAD~2=adeebe2c65601e7d74c8b566de2af1d9537921f0
 - 真实 Supabase 写库/存储联调仍缺 `SUPABASE_SERVICE_ROLE_KEY`
 - 登录后截图回归仍缺测试账号或有效 Supabase 登录态
 - 根工作区仓库仍未配置可用 `origin`
@@ -888,7 +888,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: adeebe2c65601e7d74c8b566de2af1d9537921f0
+- workspace-root HEAD~1 anchor: dfe8199a57b637812d2790bc046209cfe3ff8147
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -1172,8 +1172,8 @@
 - 最近一轮归档审计摘要也必须纳入 `blocking point consistency issues` 统计项，避免只修正文案不修正机读摘要
 
 当前 blocking.point 快照：
-- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=adeebe2c65601e7d74c8b566de2af1d9537921f0、HEAD~2=e03c9dec5bc2f26f00701595cf9692d521c1825f；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
-- workspace-root pre-sync anchors exact snapshot: HEAD~1=adeebe2c65601e7d74c8b566de2af1d9537921f0、HEAD~2=e03c9dec5bc2f26f00701595cf9692d521c1825f
+- blocking.point exact snapshot: 真实\ Supabase\ 写库/存储联调仍缺少\ SUPABASE_SERVICE_ROLE_KEY，mock\ 初始化写入\ kv_store_4b732228\ 仍会命中\ RLS；登录后核心页面截图回归仍缺真实测试账号/有效\ Supabase\ 登录态；此外根工作区仓库未配置\ origin，当前根目录提交无法\ push；根仓库\ pre\-sync\ 锚点仍为\ HEAD\~1=dfe8199a57b637812d2790bc046209cfe3ff8147、HEAD\~2=adeebe2c65601e7d74c8b566de2af1d9537921f0；并计划于本轮提交后复跑\ python3\ scripts/root_archive_audit\.py\ 确认\ doc\ timestamp\ issues:\ 0、recent\ commit\ consistency\ issues:\ 0、root\ head\ consistency\ issues:\ 0、root\ remote\ consistency\ issues:\ 0、blocking\ snapshot\ consistency\ issues:\ 0、workspace\ status\ consistency\ issues:\ 0、subrepo\ workspace\ status\ consistency\ issues:\ 0、blocking\ status\ consistency\ issues:\ 0、latest\ blocking\ tried\ consistency\ issues:\ 0、blocking\ recent\ trail\ consistency\ issues:\ 0、latest\ audit\ snapshot\ consistency\ issues:\ 0、verification\ record\ consistency\ issues:\ 0、execution\ plan\ consistency\ issues:\ 0、completed\ sequence\ consistency\ issues:\ 0、fallback\ route\ consistency\ issues:\ 0、blocking\ point\ consistency\ issues:\ 0、next\ steps\ exact\ consistency\ issues:\ 0、verification\ section\ sequence\ issues:\ 0、latest\ audit\ summary\ order\ issues:\ 0，RESULT:\ PASS
+- workspace-root pre-sync anchors exact snapshot: HEAD~1=dfe8199a57b637812d2790bc046209cfe3ff8147、HEAD~2=adeebe2c65601e7d74c8b566de2af1d9537921f0
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.point baseline
 - RESULT: PASS
 
@@ -1344,7 +1344,7 @@
 当前 latestAudit exact snapshot：
 - latestAudit command exact snapshot: python3 scripts/root_archive_audit.py
 - latestAudit result exact snapshot: PASS
-- latestAudit timestamp exact snapshot: 2026-03-09T10:03+08:00
+- latestAudit timestamp exact snapshot: 2026-03-09T10:09+08:00
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latestAudit exact snapshot baseline
 - RESULT: PASS
 
@@ -1375,14 +1375,14 @@
 当前子仓库 git status exact snapshot：
 - subrepo git status --short: explicit dirty snapshot baseline stored in execution-state.json / VERIFICATION_RECORD.md / currentStep
 - heart-plant status count: 3
-- heart-plant exact snapshot: M src/app/pages/UserLogin.tsx
-- heart-plant exact snapshot: M src/app/utils/api.ts
-- heart-plant exact snapshot: M utils/supabase/info.tsx
+- heart-plant exact snapshot:  M src/app/pages/UserLogin.tsx
+- heart-plant exact snapshot:  M src/app/utils/api.ts
+- heart-plant exact snapshot:  M utils/supabase/info.tsx
 - heart-plant-admin status count: 2
-- heart-plant-admin exact snapshot: M src/app/utils/api.ts
-- heart-plant-admin exact snapshot: M utils/supabase/info.tsx
+- heart-plant-admin exact snapshot:  M src/app/utils/api.ts
+- heart-plant-admin exact snapshot:  M utils/supabase/info.tsx
 - heart-plant-api status count: 1
-- heart-plant-api exact snapshot: M deno.json
+- heart-plant-api exact snapshot:  M deno.json
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same subrepo workspace exact snapshot baseline
 - exact snapshot policy: preserve current dirty entries verbatim until the three subrepos are actually cleaned or committed
 - RESULT: PASS
