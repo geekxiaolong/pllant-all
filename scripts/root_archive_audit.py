@@ -559,13 +559,14 @@ VERIFICATION_RECORD_ROOT_HEAD_MARKERS = (
     'git rev-parse HEAD',
     'workspace-root current HEAD',
     'workspace-root HEAD~1',
+    'workspace-root HEAD~2',
     'currentStep',
     'RESULT: PASS',
 )
 
 ROOT_HEAD_REQUIRED_MARKERS = {
-    'currentStep': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'RESULT: PASS'),
+    'currentStep': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'workspace-root HEAD~2', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('git rev-parse HEAD', 'workspace-root current HEAD', 'workspace-root HEAD~1', 'workspace-root HEAD~2', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_ROOT_REMOTE_HEADING = '### 27. 根仓库 origin 缺失显式校验'
@@ -1586,7 +1587,10 @@ def root_head_consistency_gaps() -> list[str]:
         head_minus_one_marker = f'- workspace-root HEAD~1 anchor: {recent_heads[1]}'
         if head_minus_one_marker not in section_text:
             gaps.append(f'VERIFICATION_RECORD root head marker missing :: {head_minus_one_marker}')
-        current_head_note = '- workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility'
+        head_minus_two_marker = f'- workspace-root HEAD~2 anchor: {recent_heads[2]}'
+        if head_minus_two_marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD root head marker missing :: {head_minus_two_marker}')
+        current_head_note = '- workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 / HEAD~2 plus git rev-parse HEAD command visibility'
         if current_head_note not in section_text:
             gaps.append(f'VERIFICATION_RECORD root head marker missing :: {current_head_note}')
 
@@ -1596,6 +1600,8 @@ def root_head_consistency_gaps() -> list[str]:
             gaps.append(f'execution-state currentStep missing root head marker :: {marker}')
     if recent_heads[1] not in current_step:
         gaps.append(f'execution-state currentStep missing root HEAD~1 hash :: {recent_heads[1]}')
+    if recent_heads[2] not in current_step:
+        gaps.append(f'execution-state currentStep missing root HEAD~2 hash :: {recent_heads[2]}')
 
     for marker in ROOT_HEAD_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
         if marker not in verification_text:
