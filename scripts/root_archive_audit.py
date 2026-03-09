@@ -511,8 +511,8 @@ RECENT_COMMIT_REPOS = {
 }
 
 RECENT_COMMIT_REQUIRED_MARKERS = {
-    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'workspace-root git log -3 exact snapshot', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'workspace-root git log -3 exact snapshot', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
+    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'workspace-root git log -3 pre-sync window exact snapshot', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'workspace-root git log -3 pre-sync window exact snapshot', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_RECENT_COMMITS_HEADING = '### 26. recentCommits 与仓库 HEAD 显式校验'
@@ -522,7 +522,7 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
     'git log -3 --format=%H',
     'HEAD~1',
     'HEAD~2',
-    'workspace-root git log -3 exact snapshot',
+    'workspace-root git log -3 pre-sync window exact snapshot',
     'git -C heart-plant remote get-url origin',
     'git -C heart-plant-admin remote get-url origin',
     'git -C heart-plant-api remote get-url origin',
@@ -1922,8 +1922,8 @@ def recent_commit_consistency_gaps() -> list[str]:
                             if head2_marker not in section_text:
                                 gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {head2_marker}')
                             recent_log_marker = (
-                                '- workspace-root git log -3 exact snapshot: '
-                                f'{recent_heads[0]} -> {recent_heads[1]} -> {recent_heads[2]}'
+                                '- workspace-root git log -3 pre-sync window exact snapshot: '
+                                f'{recent_heads[1]} -> {recent_heads[2]}'
                             )
                             if recent_log_marker not in section_text:
                                 gaps.append(f'VERIFICATION_RECORD recent commit marker missing :: {recent_log_marker}')
