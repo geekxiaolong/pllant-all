@@ -604,11 +604,11 @@ WORKSPACE_STATUS_ALLOWED_SHORT = (
     ' M THREE-APP-SPLIT-STATUS.md',
     ' M VERIFICATION_RECORD.md',
     ' M execution-state.json',
-    '?? EXECUTION_PLAN.md',
+    ' M scripts/root_archive_audit.py',
 )
 WORKSPACE_STATUS_REQUIRED_MARKERS = {
-    'currentStep': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
+    'currentStep': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', 'scripts/root_archive_audit.py', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', 'scripts/root_archive_audit.py', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_WORKSPACE_STATUS_HEADING = '### 29. 根工作区 git status 显式校验'
@@ -620,7 +620,7 @@ VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
     'THREE-APP-SPLIT-STATUS.md',
     'VERIFICATION_RECORD.md',
     'execution-state.json',
-    '?? EXECUTION_PLAN.md',
+    'scripts/root_archive_audit.py',
     'allowed sync baseline dirty files',
     'RESULT: PASS',
 )
