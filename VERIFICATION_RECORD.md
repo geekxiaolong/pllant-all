@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 14:15 (Asia/Shanghai)
+更新时间：2026-03-09 14:03 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -564,7 +564,7 @@
 - 本轮已提交根仓库最新本地提交（`chore: validate audit record sync`）；随后执行 `git push origin HEAD` 仍失败，错误为 `origin does not appear to be a git repository`
 
 ### 22. 最近一轮归档审计摘要（机读对照）
-- timestamp: 2026-03-09 14:15
+- timestamp: 2026-03-09 14:03
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -606,7 +606,7 @@
 - RESULT: PASS
 
 ### 24. 主导航文档更新时间显式校验
-- README.md / START_HERE.md / ROOT_ARCHIVE_MANIFEST.md / THREE-APP-SPLIT-STATUS.md / VERIFICATION_RECORD.md timestamp baseline synchronized to 2026-03-09 14:15 (Asia/Shanghai)
+- README.md / START_HERE.md / ROOT_ARCHIVE_MANIFEST.md / THREE-APP-SPLIT-STATUS.md / VERIFICATION_RECORD.md timestamp baseline synchronized to 2026-03-09 14:03 (Asia/Shanghai)
 - RESULT: PASS
 
 ### 25. execution-state / fallback 阻塞同步显式校验
@@ -623,8 +623,8 @@
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
 - workspace-root: latest local HEAD e9660347f2a893cade53d21da027d71082172c4d (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
 - workspace-root recent local heads (pre-sync latest 2): e9660347f2a893cade53d21da027d71082172c4d, e244a682e47189800f24f7010a00c8402048b88d
-- workspace-root HEAD~1: e244a682e47189800f24f7010a00c8402048b88d
-- workspace-root HEAD~2: 09c47d0bb1d3d5a89debeda05f27efa036434267
+- workspace-root HEAD~1: e9660347f2a893cade53d21da027d71082172c4d
+- workspace-root HEAD~2: e244a682e47189800f24f7010a00c8402048b88d
 - workspace-root pre-sync command: git log -3 --format=%H
 - workspace-root git log -3 pre-sync window exact snapshot: e9660347f2a893cade53d21da027d71082172c4d -> e244a682e47189800f24f7010a00c8402048b88d
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无缩写
@@ -638,7 +638,7 @@
 ### 28. blocking 快照与续跑清单显式校验
 - blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=e9660347f2a893cade53d21da027d71082172c4d、HEAD~2=e244a682e47189800f24f7010a00c8402048b88d；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
 - workspace-root pre-sync anchors exact snapshot: HEAD~1=e9660347f2a893cade53d21da027d71082172c4d、HEAD~2=e244a682e47189800f24f7010a00c8402048b88d
-- blocking.tried latest tried entry exact snapshot: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=e9660347f2a893cade53d21da027d71082172c4d、HEAD~1=e244a682e47189800f24f7010a00c8402048b88d、HEAD~2=09c47d0bb1d3d5a89debeda05f27efa036434267；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
+- latest tried entry exact snapshot: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=e9660347f2a893cade53d21da027d71082172c4d、HEAD~1=e244a682e47189800f24f7010a00c8402048b88d、HEAD~2=09c47d0bb1d3d5a89debeda05f27efa036434267；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
 - blocking.tried recent 3 [1]: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=84d253d83f07a4aebbc32d12672dd7eb7ae03962、HEAD~1=1ee576f17a5379ea8d9b32d5b77a0b23d53786d2、HEAD~2=93ebb7c5e8564dce0c8dc9e9f9e88c987b2bc3b7；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
 - blocking.tried recent 3 [2]: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=09c47d0bb1d3d5a89debeda05f27efa036434267、HEAD~1=84d253d83f07a4aebbc32d12672dd7eb7ae03962、HEAD~2=1ee576f17a5379ea8d9b32d5b77a0b23d53786d2；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
 - blocking.tried recent 3 [3]: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=e244a682e47189800f24f7010a00c8402048b88d、HEAD~1=09c47d0bb1d3d5a89debeda05f27efa036434267、HEAD~2=84d253d83f07a4aebbc32d12672dd7eb7ae03962；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
@@ -725,7 +725,7 @@
 
 ### 36. blocking.tried 最新尝试显式校验
 - blocking.tried latest tried entry synchronized across execution-state.json / VERIFICATION_RECORD.md / currentStep
-- latest tried entry exact snapshot: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=e244a682e47189800f24f7010a00c8402048b88d、HEAD~1=09c47d0bb1d3d5a89debeda05f27efa036434267、HEAD~2=84d253d83f07a4aebbc32d12672dd7eb7ae03962；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
+- latest tried entry exact snapshot: 本轮继续沿 nextSteps[2] fallback route 维持根工作区残余巡检脚本化基线，按当前根仓库提交链把 execution-state.json / VERIFICATION_RECORD.md 中的 workspace-root pre-sync anchors、recentCommits.workspace-root、workspace-root git log -3 pre-sync window exact snapshot、blocking.point exact snapshot 与 latestAudit timestamp 整体推进到 current HEAD=e9660347f2a893cade53d21da027d71082172c4d、HEAD~1=e244a682e47189800f24f7010a00c8402048b88d、HEAD~2=09c47d0bb1d3d5a89debeda05f27efa036434267；随后在本轮 sync commit 后复跑 python3 scripts/root_archive_audit.py，确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0、RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest tried baseline
 - RESULT: PASS
 
@@ -736,7 +736,7 @@
 - RESULT: PASS
 
 ### 38. 顶部更新时间三向一致性显式校验
-- execution-state.json -> updatedAt / latestAudit.timestamp / VERIFICATION_RECORD.md 顶部更新时间: synchronized to 2026-03-09T14:15:00+08:00
+- execution-state.json -> updatedAt / latestAudit.timestamp / VERIFICATION_RECORD.md 顶部更新时间: synchronized to 2026-03-09T14:03:00+08:00
 - RESULT: PASS
 
 ### 39. blocking.point 精确快照显式校验
@@ -788,7 +788,7 @@
 ### 45. latestAudit command/result/timestamp exact snapshot 显式校验
 - latestAudit command exact snapshot: python3 scripts/root_archive_audit.py
 - latestAudit result exact snapshot: PASS
-- latestAudit timestamp exact snapshot: 2026-03-09T14:15:00+08:00
+- latestAudit timestamp exact snapshot: 2026-03-09T14:03:00+08:00
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latestAudit exact snapshot baseline
 - RESULT: PASS
 
