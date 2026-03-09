@@ -463,6 +463,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'workspace status consistency issues',
     'blocking status consistency issues',
     'latest blocking tried consistency issues',
+    'blocking recent trail consistency issues',
     'verification record consistency issues',
     'execution plan consistency issues',
     'completed sequence consistency issues',
@@ -617,6 +618,22 @@ VERIFICATION_RECORD_BLOCKING_POINT_MARKERS = (
     'VERIFICATION_RECORD.md',
     'RESULT: PASS',
 )
+
+VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_HEADING = '### 40. blocking.tried recent 3 去重 / 顺序显式校验'
+VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_MARKERS = (
+    'blocking.tried',
+    'recent 3',
+    'no duplicates',
+    'tail order',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'RESULT: PASS',
+)
+BLOCKING_RECENT_TRAIL_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.tried', 'recent 3', 'no duplicates', 'tail order', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.tried', 'recent 3', 'no duplicates', 'tail order', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
+}
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -1721,6 +1738,69 @@ def workspace_status_consistency_gaps() -> list[str]:
 
 
 
+def blocking_recent_trail_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    blocking = state.get('blocking', {})
+    tried = blocking.get('tried')
+    if not isinstance(tried, list) or len(tried) < 3:
+        return ['execution-state blocking.tried needs at least 3 entries for recent trail check']
+
+    recent_slice = tried[-3:]
+    normalized_slice: list[str] = []
+    for item in recent_slice:
+        if not isinstance(item, str) or not item.strip():
+            gaps.append('execution-state blocking.tried recent 3 contains blank item')
+            continue
+        normalized_slice.append(item)
+
+    if len(normalized_slice) == 3 and len(set(normalized_slice)) != 3:
+        gaps.append('execution-state blocking.tried recent 3 duplicate entries :: ' + ' | '.join(normalized_slice))
+
+    current_step = state.get('currentStep', '')
+    for marker in BLOCKING_RECENT_TRAIL_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing blocking recent trail marker :: {marker}')
+
+    for marker in BLOCKING_RECENT_TRAIL_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing blocking recent trail marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_HEADING)
+    if not section_text:
+        gaps.append('VERIFICATION_RECORD missing blocking recent trail section :: ' f'{VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_HEADING}')
+        return gaps
+
+    for marker in VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking recent trail marker missing :: {marker}')
+
+    for idx, item in enumerate(normalized_slice, start=1):
+        expected_marker = f'- recent 3 [{idx}]: {item}'
+        if expected_marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking recent trail marker missing :: {expected_marker}')
+
+    if normalized_slice:
+        expected_order = f"- tail order exact snapshot: {' -> '.join(normalized_slice)}"
+        if expected_order not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking recent trail marker missing :: {expected_order}')
+
+    if '- duplicate check: no duplicates across recent 3' not in section_text:
+        gaps.append('VERIFICATION_RECORD blocking recent trail marker missing :: - duplicate check: no duplicates across recent 3')
+
+    snapshot_section = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING)
+    if not snapshot_section:
+        gaps.append('VERIFICATION_RECORD missing blocking snapshot section for recent trail cross-check :: ' f'{VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING}')
+    else:
+        for item in normalized_slice:
+            if item not in snapshot_section:
+                gaps.append(f'VERIFICATION_RECORD blocking snapshot section missing recent trail item :: {item}')
+
+    return gaps
+
+
 def latest_blocking_tried_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1954,6 +2034,7 @@ def main() -> int:
     workspace_status_issues = workspace_status_consistency_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
     latest_blocking_tried_issues = latest_blocking_tried_consistency_gaps()
+    blocking_recent_trail_issues = blocking_recent_trail_consistency_gaps()
     execution_plan_issues = execution_plan_consistency_gaps()
     completed_sequence_issues = completed_sequence_consistency_gaps()
     fallback_route_issues = fallback_route_consistency_gaps()
@@ -1990,6 +2071,7 @@ def main() -> int:
         'workspace status consistency issues': len(workspace_status_issues),
         'blocking status consistency issues': len(blocking_status_issues),
         'latest blocking tried consistency issues': len(latest_blocking_tried_issues),
+        'blocking recent trail consistency issues': len(blocking_recent_trail_issues),
         'verification record consistency issues': 0,
         'execution plan consistency issues': len(execution_plan_issues),
         'completed sequence consistency issues': len(completed_sequence_issues),
@@ -2064,6 +2146,9 @@ def main() -> int:
     if latest_blocking_tried_issues:
         print('\n[latest blocking tried consistency issues]')
         print('\n'.join(latest_blocking_tried_issues))
+    if blocking_recent_trail_issues:
+        print('\n[blocking recent trail consistency issues]')
+        print('\n'.join(blocking_recent_trail_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -2076,6 +2161,9 @@ def main() -> int:
     if fallback_route_issues:
         print('\n[fallback route consistency issues]')
         print('\n'.join(fallback_route_issues))
+    if blocking_point_issues:
+        print('\n[blocking point consistency issues]')
+        print('\n'.join(blocking_point_issues))
 
     failed = bool(
         missing_readmes
@@ -2098,10 +2186,12 @@ def main() -> int:
         or workspace_status_issues
         or blocking_status_issues
         or latest_blocking_tried_issues
+        or blocking_recent_trail_issues
         or verification_record_issues
         or execution_plan_issues
         or completed_sequence_issues
         or fallback_route_issues
+        or blocking_point_issues
     )
     if failed:
         print('\nRESULT: FAIL')
