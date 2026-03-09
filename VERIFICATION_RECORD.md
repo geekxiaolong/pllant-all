@@ -694,12 +694,12 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD 7b6d1a96036ccfb206e3f17a3c081ef44738c075 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 7b6d1a96036ccfb206e3f17a3c081ef44738c075, 06912c27b839c9021677a94ccc3daa19ec79c373
-- workspace-root HEAD~1: 7b6d1a96036ccfb206e3f17a3c081ef44738c075
-- workspace-root HEAD~2: 06912c27b839c9021677a94ccc3daa19ec79c373
+- workspace-root: latest local HEAD 358fba15703ec7881a140bec35ab4a648e899e2d (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 358fba15703ec7881a140bec35ab4a648e899e2d, 7b6d1a96036ccfb206e3f17a3c081ef44738c075
+- workspace-root HEAD~1: 358fba15703ec7881a140bec35ab4a648e899e2d
+- workspace-root HEAD~2: 7b6d1a96036ccfb206e3f17a3c081ef44738c075
 - workspace-root pre-sync command: git log -3 --format=%H
-- workspace-root git log -3 pre-sync window exact snapshot: 7b6d1a96036ccfb206e3f17a3c081ef44738c075 -> 06912c27b839c9021677a94ccc3daa19ec79c373
+- workspace-root git log -3 pre-sync window exact snapshot: 358fba15703ec7881a140bec35ab4a648e899e2d -> 7b6d1a96036ccfb206e3f17a3c081ef44738c075
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无缩写
 - RESULT: PASS
 
@@ -1073,8 +1073,8 @@
 - 后续若 cron 只更新部分文档顶部时间或只更新时间戳 JSON 字段，脚本会直接 FAIL，进一步降低跨文件时间指针漂移风险
 
 ### 39. blocking.point 精确快照显式校验
-- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=7b6d1a96036ccfb206e3f17a3c081ef44738c075、HEAD~2=06912c27b839c9021677a94ccc3daa19ec79c373；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
-- workspace-root pre-sync anchors exact snapshot: HEAD~1=7b6d1a96036ccfb206e3f17a3c081ef44738c075、HEAD~2=06912c27b839c9021677a94ccc3daa19ec79c373
+- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=358fba15703ec7881a140bec35ab4a648e899e2d、HEAD~2=7b6d1a96036ccfb206e3f17a3c081ef44738c075；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、subrepo workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- workspace-root pre-sync anchors exact snapshot: HEAD~1=358fba15703ec7881a140bec35ab4a648e899e2d、HEAD~2=7b6d1a96036ccfb206e3f17a3c081ef44738c075
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.point baseline
 - RESULT: PASS
 
