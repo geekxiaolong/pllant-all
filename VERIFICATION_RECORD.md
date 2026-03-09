@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 08:06 (Asia/Shanghai)
+更新时间：2026-03-09 08:11 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 08:06
+- timestamp: 2026-03-09 08:11
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -600,6 +600,7 @@
 - execution plan consistency issues: 0
 - completed sequence consistency issues: 0
 - fallback route consistency issues: 0
+- blocking point consistency issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -1213,4 +1214,30 @@
 结论：
 - 根工作区归档巡检现已覆盖“主导航文档 + 验证记录顶部更新时间是否和 execution-state / latestAudit 同步”这一层约束
 - 后续若 cron 只更新部分文档顶部时间或只更新时间戳 JSON 字段，脚本会直接 FAIL，进一步降低跨文件时间指针漂移风险
+
+### 39. blocking.point 精确快照显式校验
+本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，在短期仍缺 `SUPABASE_SERVICE_ROLE_KEY` / 测试账号 / 根仓库 `origin` 的前提下，把 `blocking.point` 从“只要提到几个 blocker 关键词即可”升级为“完整阻塞描述必须在 `execution-state.json`、`currentStep`、`VERIFICATION_RECORD.md` 三侧保持 exact snapshot 一致”。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 新增 `blocking_point_consistency_gaps()`，并将结果汇总到 `blocking point consistency issues`
+- `execution-state.json -> currentStep` 必须显式命中 `blocking.point`、`SUPABASE_SERVICE_ROLE_KEY`、`测试账号`、`origin`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并在 `### 28. blocking 快照与续跑清单显式校验` 中同步落盘同一条 `blocking.point exact snapshot`
+- 最近一轮归档审计摘要也必须纳入 `blocking point consistency issues` 统计项，避免只修正文案不修正机读摘要
+
+实际回归：
+1. 本轮补强 `scripts/root_archive_audit.py`，新增 `blocking_point_consistency_gaps()` 与 `blocking point consistency issues` 汇总项
+2. 同步回写 `execution-state.json -> currentStep`、`execution-state.json -> blocking.tried[-1]`、`execution-state.json -> latestAudit.summary`，并将根仓库 pre-sync anchors 更新为 `workspace-root HEAD~1=96633a59fe6dc84ee7800adfeb7bd3cf73da9c1b`、`workspace-root HEAD~2=f9b4c41c76b802a0c277eda3ec905823e0dfe243`
+3. 在 `VERIFICATION_RECORD.md -> ### 28` 与本节同步落盘：
+   - `blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push`
+4. 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部时间为 `2026-03-09 08:11 (Asia/Shanghai)`
+5. 复跑 `python3 scripts/root_archive_audit.py`，确认 `blocking point consistency issues: 0`、`verification record consistency issues: 0`、`doc timestamp issues: 0`、`RESULT: PASS`
+
+当前 blocking.point 快照：
+- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push
+- execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.point baseline
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖“完整阻塞描述是否仍在 execution-state.json / currentStep / VERIFICATION_RECORD.md 三侧精确同步”这一层约束
+- 后续若 cron 只保留 blocker 关键词、却让 `blocking.point` 具体措辞与事实快照漂移，脚本会直接 FAIL，进一步降低阻塞记录被局部改写后的失真风险
 

@@ -467,6 +467,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'execution plan consistency issues',
     'completed sequence consistency issues',
     'fallback route consistency issues',
+    'blocking point consistency issues',
 )
 
 
@@ -597,6 +598,23 @@ VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS = (
     'SUPABASE_SERVICE_ROLE_KEY',
     '测试账号',
     'origin',
+    'RESULT: PASS',
+)
+
+BLOCKING_POINT_REQUIRED_MARKERS = {
+    'currentStep': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_BLOCKING_POINT_HEADING = '### 39. blocking.point 精确快照显式校验'
+VERIFICATION_RECORD_BLOCKING_POINT_MARKERS = (
+    'blocking.point',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    '测试账号',
+    'origin',
+    'currentStep',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
     'RESULT: PASS',
 )
 
@@ -1756,6 +1774,54 @@ def latest_blocking_tried_consistency_gaps() -> list[str]:
     return gaps
 
 
+def blocking_point_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    point = state.get('blocking', {}).get('point', '')
+    current_step = state.get('currentStep', '')
+    if not isinstance(point, str) or not point.strip():
+        return ['execution-state blocking.point missing or empty']
+
+    for marker in BLOCKING_POINT_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing blocking.point marker :: {marker}')
+    for marker in BLOCKING_POINT_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing blocking.point marker :: {marker}')
+
+    if point not in current_step:
+        gaps.append('execution-state currentStep missing exact blocking.point snapshot')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_POINT_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing blocking point section :: '
+            f'{VERIFICATION_RECORD_BLOCKING_POINT_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_BLOCKING_POINT_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD blocking.point marker missing :: {marker}')
+
+    exact_marker = f'- blocking.point exact snapshot: {point}'
+    if exact_marker not in section_text:
+        gaps.append('VERIFICATION_RECORD blocking.point exact snapshot mismatch')
+
+    blocking_snapshot_section = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING)
+    if not blocking_snapshot_section:
+        gaps.append(
+            'VERIFICATION_RECORD missing blocking snapshot section :: '
+            f'{VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING}'
+        )
+    elif exact_marker not in blocking_snapshot_section:
+        gaps.append('VERIFICATION_RECORD blocking snapshot section missing exact blocking.point snapshot')
+
+    return gaps
+
+
 def blocking_status_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -1891,6 +1957,7 @@ def main() -> int:
     execution_plan_issues = execution_plan_consistency_gaps()
     completed_sequence_issues = completed_sequence_consistency_gaps()
     fallback_route_issues = fallback_route_consistency_gaps()
+    blocking_point_issues = blocking_point_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -1927,6 +1994,7 @@ def main() -> int:
         'execution plan consistency issues': len(execution_plan_issues),
         'completed sequence consistency issues': len(completed_sequence_issues),
         'fallback route consistency issues': len(fallback_route_issues),
+        'blocking point consistency issues': len(blocking_point_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
