@@ -469,6 +469,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'completed sequence consistency issues',
     'fallback route consistency issues',
     'blocking point consistency issues',
+    'next steps exact consistency issues',
 )
 
 
@@ -635,6 +636,22 @@ VERIFICATION_RECORD_BLOCKING_RECENT_TRAIL_MARKERS = (
 BLOCKING_RECENT_TRAIL_REQUIRED_MARKERS = {
     'currentStep': ('blocking.tried', 'recent 3', 'no duplicates', 'tail order', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
     'VERIFICATION_RECORD.md': ('blocking.tried', 'recent 3', 'no duplicates', 'tail order', 'execution-state.json', 'VERIFICATION_RECORD.md', 'RESULT: PASS'),
+}
+
+VERIFICATION_RECORD_NEXT_STEPS_EXACT_HEADING = '### 42. nextSteps[0..2] 精确快照显式校验'
+VERIFICATION_RECORD_NEXT_STEPS_EXACT_MARKERS = (
+    'nextSteps',
+    'nextSteps[0]',
+    'nextSteps[1]',
+    'nextSteps[2]',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'RESULT: PASS',
+)
+NEXT_STEPS_EXACT_REQUIRED_MARKERS = {
+    'currentStep': ('nextSteps', 'nextSteps[0]', 'nextSteps[1]', 'nextSteps[2]', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('nextSteps', 'nextSteps[0]', 'nextSteps[1]', 'nextSteps[2]', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
@@ -1933,6 +1950,49 @@ def blocking_point_consistency_gaps() -> list[str]:
     return gaps
 
 
+def next_steps_exact_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    next_steps = state.get('nextSteps')
+    if not isinstance(next_steps, list) or len(next_steps) < 3:
+        return ['execution-state nextSteps missing required 3 entries for exact snapshot check']
+
+    current_step = state.get('currentStep', '')
+    for marker in NEXT_STEPS_EXACT_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing nextSteps exact marker :: {marker}')
+
+    for marker in NEXT_STEPS_EXACT_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing nextSteps exact marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_NEXT_STEPS_EXACT_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing nextSteps exact section :: '
+            f'{VERIFICATION_RECORD_NEXT_STEPS_EXACT_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_NEXT_STEPS_EXACT_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD nextSteps exact marker missing :: {marker}')
+
+    for index, step in enumerate(next_steps[:3]):
+        if not isinstance(step, str) or not step.strip():
+            gaps.append(f'execution-state nextSteps[{index}] missing or blank for exact snapshot check')
+            continue
+        exact_line = f'- nextSteps[{index}] exact snapshot: {step}'
+        if step not in current_step:
+            gaps.append(f'execution-state currentStep missing nextSteps[{index}] exact snapshot')
+        if exact_line not in section_text:
+            gaps.append(f'VERIFICATION_RECORD nextSteps exact marker missing :: {exact_line}')
+
+    return gaps
+
+
 def blocking_status_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -2070,6 +2130,7 @@ def main() -> int:
     completed_sequence_issues = completed_sequence_consistency_gaps()
     fallback_route_issues = fallback_route_consistency_gaps()
     blocking_point_issues = blocking_point_consistency_gaps()
+    next_steps_exact_issues = next_steps_exact_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -2108,6 +2169,7 @@ def main() -> int:
         'completed sequence consistency issues': len(completed_sequence_issues),
         'fallback route consistency issues': len(fallback_route_issues),
         'blocking point consistency issues': len(blocking_point_issues),
+        'next steps exact consistency issues': len(next_steps_exact_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -2195,6 +2257,9 @@ def main() -> int:
     if blocking_point_issues:
         print('\n[blocking point consistency issues]')
         print('\n'.join(blocking_point_issues))
+    if next_steps_exact_issues:
+        print('\n[next steps exact consistency issues]')
+        print('\n'.join(next_steps_exact_issues))
 
     failed = bool(
         missing_readmes
@@ -2223,6 +2288,7 @@ def main() -> int:
         or completed_sequence_issues
         or fallback_route_issues
         or blocking_point_issues
+        or next_steps_exact_issues
     )
     if failed:
         print('\nRESULT: FAIL')
