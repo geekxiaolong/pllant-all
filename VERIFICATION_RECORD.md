@@ -714,9 +714,9 @@
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
 - workspace-root: latest local HEAD 63edaaf318c8babbd8895a594fdf316aa4d4f633 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): c0be9e0dd9268ba0f378d89dca8151e357692a1a, 5e68db142e776d14f842163b81cba5aa3a510576
-- workspace-root HEAD~1: c0be9e0dd9268ba0f378d89dca8151e357692a1a
-- workspace-root HEAD~2: 5e68db142e776d14f842163b81cba5aa3a510576
+- workspace-root recent local heads (pre-sync latest 2): e0faf923cf47f8461d8dbe3bab8b1d6da9536c15, 9025836389d8da49c7061490ec066f7a7dfe61bb
+- workspace-root HEAD~1: e0faf923cf47f8461d8dbe3bab8b1d6da9536c15
+- workspace-root HEAD~2: 9025836389d8da49c7061490ec066f7a7dfe61bb
 - workspace-root pre-sync command: git log -3 --format=%H
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无短 hash 歧义
 - RESULT: PASS
@@ -817,7 +817,7 @@
 - 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险
 
 
-- - latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
+- - - latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [2]: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
@@ -915,7 +915,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: c0be9e0dd9268ba0f378d89dca8151e357692a1a
+- workspace-root HEAD~1 anchor: e0faf923cf47f8461d8dbe3bab8b1d6da9536c15
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
