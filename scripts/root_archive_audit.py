@@ -1588,6 +1588,9 @@ def recent_commit_consistency_gaps() -> list[str]:
         if marker not in verification_text:
             gaps.append(f'VERIFICATION_RECORD missing recent commit marker :: {marker}')
 
+    current_step_exact_markers: list[str] = []
+    verification_exact_markers: list[str] = []
+
     for repo_name, repo_path in sorted(RECENT_COMMIT_REPOS.items()):
         if repo_name not in recent_commits:
             gaps.append(f'execution-state recentCommits missing repo :: {repo_name}')
@@ -1641,6 +1644,18 @@ def recent_commit_consistency_gaps() -> list[str]:
                     'execution-state recentCommits mismatch :: '
                     f'{repo_name} recorded={recorded} actual={actual}'
                 )
+            try:
+                origin_url = git_origin_url(repo_path)
+            except RuntimeError as exc:
+                gaps.append(f'git origin lookup failed :: {repo_name} -> {exc}')
+                origin_url = None
+            exact_hash_marker = f'{repo_name}: {actual}'
+            current_step_exact_markers.append(exact_hash_marker)
+            verification_exact_markers.append(f'- {exact_hash_marker}')
+            if origin_url:
+                exact_origin_marker = f'git -C {repo_name} remote get-url origin: {origin_url}'
+                current_step_exact_markers.append(exact_origin_marker)
+                verification_exact_markers.append(f'- {exact_origin_marker}')
         if section_text:
             if repo_name == 'workspace-root':
                 if '- workspace-root:' not in section_text:
@@ -1691,6 +1706,14 @@ def recent_commit_consistency_gaps() -> list[str]:
                             'VERIFICATION_RECORD recent commit origin marker missing :: '
                             f'{expected_origin_command}'
                         )
+
+    for marker in current_step_exact_markers:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing exact recent commit snapshot :: {marker}')
+
+    for marker in verification_exact_markers:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing exact recent commit snapshot :: {marker}')
 
     return gaps
 
