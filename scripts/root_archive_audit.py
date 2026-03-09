@@ -624,8 +624,8 @@ VERIFICATION_RECORD_BLOCKING_STATUS_MARKERS = (
 )
 
 BLOCKING_POINT_REQUIRED_MARKERS = {
-    'currentStep': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'RESULT: PASS'),
+    'currentStep': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('blocking.point', 'SUPABASE_SERVICE_ROLE_KEY', '测试账号', 'origin', 'HEAD~1', 'HEAD~2', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_BLOCKING_POINT_HEADING = '### 39. blocking.point 精确快照显式校验'
@@ -2056,6 +2056,18 @@ def blocking_point_consistency_gaps() -> list[str]:
     if not isinstance(point, str) or not point.strip():
         return ['execution-state blocking.point missing or empty']
 
+    try:
+        recent_heads = git_recent_heads(ROOT, limit=3)
+    except RuntimeError as exc:
+        return [f'root recent head lookup failed during blocking.point check :: {exc}']
+
+    if len(recent_heads) < 3:
+        return [f'root recent head lookup returned too few commits during blocking.point check :: {recent_heads}']
+
+    expected_head1 = recent_heads[1]
+    expected_head2 = recent_heads[2]
+    expected_anchor_marker = f'HEAD~1={expected_head1}、HEAD~2={expected_head2}'
+
     for marker in BLOCKING_POINT_REQUIRED_MARKERS['currentStep']:
         if marker not in current_step:
             gaps.append(f'execution-state currentStep missing blocking.point marker :: {marker}')
@@ -2065,6 +2077,16 @@ def blocking_point_consistency_gaps() -> list[str]:
 
     if point not in current_step:
         gaps.append('execution-state currentStep missing exact blocking.point snapshot')
+
+    if expected_anchor_marker not in point:
+        gaps.append(
+            'execution-state blocking.point pre-sync anchors mismatch :: '
+            f'expected {expected_anchor_marker} current-point={point}'
+        )
+    if expected_head1 not in current_step:
+        gaps.append(f'execution-state currentStep missing blocking.point HEAD~1 exact snapshot :: {expected_head1}')
+    if expected_head2 not in current_step:
+        gaps.append(f'execution-state currentStep missing blocking.point HEAD~2 exact snapshot :: {expected_head2}')
 
     section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_POINT_HEADING)
     if not section_text:
@@ -2082,14 +2104,21 @@ def blocking_point_consistency_gaps() -> list[str]:
     if exact_marker not in section_text:
         gaps.append('VERIFICATION_RECORD blocking.point exact snapshot mismatch')
 
+    anchor_line = f'- workspace-root pre-sync anchors exact snapshot: HEAD~1={expected_head1}、HEAD~2={expected_head2}'
+    if anchor_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD blocking.point marker missing :: {anchor_line}')
+
     blocking_snapshot_section = extract_heading_section(verification_text, VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING)
     if not blocking_snapshot_section:
         gaps.append(
             'VERIFICATION_RECORD missing blocking snapshot section :: '
             f'{VERIFICATION_RECORD_BLOCKING_SNAPSHOT_HEADING}'
         )
-    elif exact_marker not in blocking_snapshot_section:
-        gaps.append('VERIFICATION_RECORD blocking snapshot section missing exact blocking.point snapshot')
+    else:
+        if exact_marker not in blocking_snapshot_section:
+            gaps.append('VERIFICATION_RECORD blocking snapshot section missing exact blocking.point snapshot')
+        if anchor_line not in blocking_snapshot_section:
+            gaps.append('VERIFICATION_RECORD blocking snapshot section missing blocking.point anchor exact snapshot')
 
     return gaps
 
