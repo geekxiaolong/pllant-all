@@ -506,8 +506,8 @@ RECENT_COMMIT_REPOS = {
 }
 
 RECENT_COMMIT_REQUIRED_MARKERS = {
-    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'RESULT: PASS'),
+    'currentStep': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits', 'git rev-parse HEAD', 'git log -3 --format=%H', 'HEAD~1', 'HEAD~2', 'git -C heart-plant remote get-url origin', 'git -C heart-plant-admin remote get-url origin', 'git -C heart-plant-api remote get-url origin', 'full-length', '40位', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_RECENT_COMMITS_HEADING = '### 26. recentCommits 与仓库 HEAD 显式校验'
@@ -524,6 +524,8 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
     'heart-plant-admin',
     'heart-plant-api',
     'workspace-root',
+    'full-length',
+    '40位',
     'RESULT: PASS',
 )
 
@@ -1628,11 +1630,17 @@ def recent_commit_consistency_gaps() -> list[str]:
                             'execution-state recentCommits workspace-root must match HEAD~1 :: '
                             f'recorded={recorded_head} expected={recent_heads[1]} recent={recent_heads}'
                         )
-        elif not actual.startswith(recorded):
-            gaps.append(
-                'execution-state recentCommits mismatch :: '
-                f'{repo_name} recorded={recorded} actual={actual}'
-            )
+        else:
+            if not re.fullmatch(r'[0-9a-f]{40}', recorded):
+                gaps.append(
+                    'execution-state recentCommits must use full-length 40-char hash :: '
+                    f'{repo_name} recorded={recorded}'
+                )
+            elif recorded != actual:
+                gaps.append(
+                    'execution-state recentCommits mismatch :: '
+                    f'{repo_name} recorded={recorded} actual={actual}'
+                )
         if section_text:
             if repo_name == 'workspace-root':
                 if '- workspace-root:' not in section_text:
