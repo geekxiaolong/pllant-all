@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 09:02 (Asia/Shanghai)
+更新时间：2026-03-09 09:05 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 09:02
+- timestamp: 2026-03-09 09:05
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -603,6 +603,7 @@
 - fallback route consistency issues: 0
 - blocking point consistency issues: 0
 - next steps exact consistency issues: 0
+- verification section sequence issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -710,10 +711,10 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287, e2f789af8aae27d8dda610567cb9e6984712d8b1
-- workspace-root HEAD~1: 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287
-- workspace-root HEAD~2: e2f789af8aae27d8dda610567cb9e6984712d8b1
+- workspace-root: latest local HEAD e1027d347fe534220b09f49852b0c945f744f7a5 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): e1027d347fe534220b09f49852b0c945f744f7a5, 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287
+- workspace-root HEAD~1: e1027d347fe534220b09f49852b0c945f744f7a5
+- workspace-root HEAD~2: 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287
 - workspace-root pre-sync command: git log -3 --format=%H
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无短 hash 歧义
 - RESULT: PASS
@@ -815,7 +816,7 @@
 - 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险
 
 
-- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 VERIFICATION_RECORD 章节序号 / 唯一性显式校验，修正 VERIFICATION_RECORD.md 的 ### 23 标题异常、### 41/42 顺序漂移与重复 ### 42，并新增 ### 43 章节序列快照；待本轮提交后复跑 python3 scripts/root_archive_audit.py，要求 verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已在提交 e1027d3 后复跑 python3 scripts/root_archive_audit.py，命中 latest blocking tried consistency issues: 2 与 verification record consistency issues: 3；现继续同步 execution-state.json -> currentStep、VERIFICATION_RECORD.md 第 22/36 节与 latestAudit.summary 中的 latest tried entry exact snapshot / verification section sequence 摘要，要求复跑后 latest blocking tried consistency issues: 0、verification record consistency issues: 0、workspace status consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [1]: 本轮已将 scripts/root_archive_audit.py 的 recentCommits 子仓库校验从前缀匹配收紧为 full-length 40位精确哈希校验，并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/28/31/36/39/40 节的 workspace-root pre-sync anchors、recent local heads window、latest tried entry 与 blocking.tried recent 3 tail order 快照；要求 heart-plant/heart-plant-admin/heart-plant-api 的 recentCommits 必须记录 full-length 40位 exact hash，workspace-root HEAD~1/HEAD~2、blocking.tried[-3:]、blocking.tried[-1]、latestAudit.timestamp 与 currentStep 保持一致；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0、blocking recent trail consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [2]: 本轮已补强 scripts/root_archive_audit.py，新增子仓库 recentCommits / origin exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 必须同步落盘 heart-plant / heart-plant-admin / heart-plant-api 的 40位 recentCommit 哈希与 git -C <repo> remote get-url origin 精确结果；并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/28/36/40/41 节的 latest tried entry、recent 3 tail order 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、verification record consistency issues: 0、workspace status consistency issues: 0、blocking recent trail consistency issues: 0，RESULT: PASS
 - blocking.tried recent 3 [3]: 本轮已为 scripts/root_archive_audit.py 新增 nextSteps[0..2] 精确快照显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/28/42 节同步落盘 nextSteps[0]、nextSteps[1]、nextSteps[2] 的 exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 next steps exact consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
@@ -913,7 +914,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 9e9032c9fb99e4a530cf76d6d221ecd0e4ec1287
+- workspace-root HEAD~1 anchor: e1027d347fe534220b09f49852b0c945f744f7a5
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
