@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 07:56 (Asia/Shanghai)
+更新时间：2026-03-09 08:01 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 07:56
+- timestamp: 2026-03-09 08:01
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -814,9 +814,9 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
-- 本轮已为 scripts/root_archive_audit.py 新增三端子仓库 origin 显式校验，要求 VERIFICATION_RECORD.md 第 26/37 节与 execution-state.json -> currentStep 同步落盘 git -C heart-plant/heart-plant-admin/heart-plant-api remote get-url origin 结果；提交后复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、verification record consistency issues: 0、workspace status consistency issues: 0，RESULT: PASS
 - 本轮已同步修正主导航文档更新时间、VERIFICATION_RECORD.md 第 28/31 节与 execution-state.json pre-sync 锚点，要求 README.md、START_HERE.md、ROOT_ARCHIVE_MANIFEST.md、THREE-APP-SPLIT-STATUS.md 与 latestAudit/working tree/head anchors 保持一致；提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - 本轮已同步修正 VERIFICATION_RECORD.md 第 28 节 recent 3 条阻塞快照与 latestAudit 摘要时间戳，要求 blocking.tried[-3:]、主导航文档更新时间与 root pre-sync anchors 保持一致；提交后复跑 python3 scripts/root_archive_audit.py 确认 blocking snapshot consistency issues: 0、verification record consistency issues: 0、doc timestamp issues: 0、root head consistency issues: 0，RESULT: PASS
+- 本轮已补强 scripts/root_archive_audit.py，将 VERIFICATION_RECORD.md 纳入 doc timestamp issues 顶部更新时间显式校验，并同步回写 5 份主导航/验证文档顶部时间与 pre-sync anchors；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、verification record consistency issues: 0、root head consistency issues: 0，RESULT: PASS
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
@@ -1160,7 +1160,7 @@
    - `RESULT: PASS`
 
 当前 latest tried entry 快照：
-- latest tried entry exact snapshot: 本轮已同步修正 VERIFICATION_RECORD.md 第 28 节 recent 3 条阻塞快照与 latestAudit 摘要时间戳，要求 blocking.tried[-3:]、主导航文档更新时间与 root pre-sync anchors 保持一致；提交后复跑 python3 scripts/root_archive_audit.py 确认 blocking snapshot consistency issues: 0、verification record consistency issues: 0、doc timestamp issues: 0、root head consistency issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，将 VERIFICATION_RECORD.md 纳入 doc timestamp issues 顶部更新时间显式校验，并同步回写 5 份主导航/验证文档顶部时间与 pre-sync anchors；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、verification record consistency issues: 0、root head consistency issues: 0，RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest tried entry baseline
 - blocking.tried: latest tried entry preserved as the newest blocking attempt record
 - RESULT: PASS
@@ -1194,3 +1194,23 @@
 结论：
 - 根工作区归档巡检现已覆盖“三端子仓库 recentCommits 对应的 GitHub origin 是否也被显式落盘”这一层约束
 - 后续若 cron 只同步提交哈希、漏同步三端 origin 远端，脚本会直接 FAIL，进一步降低跨仓库状态记录漂移风险
+
+
+### 38. 顶部更新时间三向一致性显式校验
+本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，把“顶部更新时间是否跨文件同步”也固化进审计脚本，避免后续只更新 `latestAudit.timestamp` 或 `VERIFICATION_RECORD.md`，却漏改主导航文档顶部时间。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 现将 `VERIFICATION_RECORD.md` 纳入 `doc timestamp issues` 的顶层时间戳校验范围
+- `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部 `更新时间：YYYY-MM-DD HH:MM (Asia/Shanghai)` 必须与 `execution-state.json -> updatedAt` 保持一致
+- `execution-state.json -> updatedAt`、`latestAudit.timestamp`、`VERIFICATION_RECORD.md` 顶部更新时间必须继续显式对齐并通过 `python3 scripts/root_archive_audit.py` 验证
+
+实际回归：
+1. 本轮补强 `scripts/root_archive_audit.py`，把 `VERIFICATION_RECORD.md` 加入 `DOC_TIMESTAMP_REQUIREMENTS`，使顶部时间戳同步问题归入 `doc timestamp issues` 审计路径
+2. 同步回写 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部时间为 `2026-03-09 08:01 (Asia/Shanghai)`
+3. 同步回写 `execution-state.json -> updatedAt`、`latestAudit.timestamp`、`currentStep`、`recentCommits.workspace-root` 与 `blocking.tried[-1]`，使 pre-sync anchors 对齐 `workspace-root HEAD~1={head1}`、`workspace-root HEAD~2={head2}`
+4. 复跑 `python3 scripts/root_archive_audit.py`，确认 `doc timestamp issues: 0`、`verification record consistency issues: 0`、`root head consistency issues: 0`、`RESULT: PASS`
+
+结论：
+- 根工作区归档巡检现已覆盖“主导航文档 + 验证记录顶部更新时间是否和 execution-state / latestAudit 同步”这一层约束
+- 后续若 cron 只更新部分文档顶部时间或只更新时间戳 JSON 字段，脚本会直接 FAIL，进一步降低跨文件时间指针漂移风险
+

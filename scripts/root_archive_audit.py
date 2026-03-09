@@ -475,6 +475,7 @@ DOC_TIMESTAMP_REQUIREMENTS = {
     'START_HERE.md': 'execution-state.json',
     'ROOT_ARCHIVE_MANIFEST.md': 'execution-state.json',
     'THREE-APP-SPLIT-STATUS.md': 'execution-state.json',
+    'VERIFICATION_RECORD.md': 'execution-state.json',
 }
 
 STATE_SYNC_MARKERS = (
