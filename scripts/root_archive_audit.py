@@ -2308,7 +2308,7 @@ def verification_record_section_sequence_gaps() -> list[str]:
         gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {exact_line}')
 
     if '- duplicate check: no duplicates across ### 22..46 numbered audit sections' not in section_text:
-        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..44 numbered audit sections')
+        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..46 numbered audit sections')
 
     return gaps
 
