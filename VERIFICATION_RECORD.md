@@ -726,10 +726,10 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa, 9b08d9256275b05cd9a5d3a089c4d60d67f463d3
-- workspace-root HEAD~1: 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
-- workspace-root HEAD~2: 9b08d9256275b05cd9a5d3a089c4d60d67f463d3
+- workspace-root: latest local HEAD 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb, 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
+- workspace-root HEAD~1: 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb
+- workspace-root HEAD~2: 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -939,7 +939,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
+- workspace-root HEAD~1 anchor: 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
