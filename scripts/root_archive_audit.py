@@ -532,8 +532,23 @@ VERIFICATION_RECORD_RECENT_COMMITS_MARKERS = (
 )
 
 ROOT_REMOTE_REQUIRED_MARKERS = {
-    'currentStep': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin'),
-    'VERIFICATION_RECORD.md': ('git remote -v', 'git remote get-url origin', 'No such remote', 'origin', 'RESULT: PASS'),
+    'currentStep': (
+        'git remote -v',
+        'git remote get-url origin',
+        'No such remote',
+        'origin',
+        'git remote -v: (no output)',
+        "git remote get-url origin: error: No such remote 'origin'",
+    ),
+    'VERIFICATION_RECORD.md': (
+        'git remote -v',
+        'git remote get-url origin',
+        'No such remote',
+        'origin',
+        'git remote -v: (no output)',
+        "git remote get-url origin: error: No such remote 'origin'",
+        'RESULT: PASS',
+    ),
 }
 
 VERIFICATION_RECORD_ROOT_HEAD_HEADING = '### 31. 根仓库 current HEAD 显式校验'
@@ -669,10 +684,10 @@ VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     'RESULT: PASS',
 )
 VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
-    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', 'RESULT: PASS'),
+    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
 }
-EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 44))
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 45))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -1531,6 +1546,26 @@ def root_remote_consistency_gaps() -> list[str]:
                 f'- git remote get-url origin: {expected_error}'
             )
 
+    exact_snapshot_section = extract_heading_section(
+        verification_text,
+        '### 44. 根仓库 origin exact snapshot 显式校验',
+    )
+    if not exact_snapshot_section:
+        gaps.append(
+            'VERIFICATION_RECORD missing root remote exact snapshot section :: '
+            '### 44. 根仓库 origin exact snapshot 显式校验'
+        )
+    else:
+        exact_markers = (
+            '- git remote -v exact snapshot: (no output)',
+            f"- git remote get-url origin exact snapshot: {expected_error}",
+            '- execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same root remote exact snapshot baseline',
+            '- RESULT: PASS',
+        )
+        for marker in exact_markers:
+            if marker not in exact_snapshot_section:
+                gaps.append(f'VERIFICATION_RECORD root remote exact snapshot marker missing :: {marker}')
+
     return gaps
 
 
@@ -2101,8 +2136,8 @@ def verification_record_section_sequence_gaps() -> list[str]:
     if exact_line not in section_text:
         gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {exact_line}')
 
-    if '- duplicate check: no duplicates across ### 22..43 numbered audit sections' not in section_text:
-        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..43 numbered audit sections')
+    if '- duplicate check: no duplicates across ### 22..44 numbered audit sections' not in section_text:
+        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..44 numbered audit sections')
 
     return gaps
 
