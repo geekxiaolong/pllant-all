@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 09:24 (Asia/Shanghai)
+更新时间：2026-03-09 09:29 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 09:24
+- timestamp: 2026-03-09 09:29
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -605,6 +605,7 @@
 - blocking point consistency issues: 0
 - next steps exact consistency issues: 0
 - verification section sequence issues: 0
+- latest audit summary order issues: 0
 
 结论：
 - 根工作区最近一轮归档审计现在不仅要求“结果写到了文档里”，还要求统计摘要在 `execution-state.json` 与 `VERIFICATION_RECORD.md` 两侧逐项一致
@@ -803,9 +804,9 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
-- 本轮已补强 scripts/root_archive_audit.py，新增根仓库 origin exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 27/44 节同步落盘 git remote -v: (no output) 与 git remote get-url origin: error: No such remote 'origin'；并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/27/31/36/40/43/44 节的 root remote exact snapshot、latest tried entry、blocking.tried recent 3 tail order 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 root remote consistency issues: 0、recent commit consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
 - 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
 - nextSteps[1]: 待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归
@@ -816,10 +817,10 @@
 - 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险
 
 
-- latest tried entry exact snapshot: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
-- blocking.tried recent 3 [1]: 本轮已为 scripts/root_archive_audit.py 新增 nextSteps[0..2] 精确快照显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/28/42 节同步落盘 nextSteps[0]、nextSteps[1]、nextSteps[2] 的 exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 next steps exact consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
-- blocking.tried recent 3 [2]: 本轮已在提交 026161f 后复跑 python3 scripts/root_archive_audit.py，命中 recent commit consistency issues: 3、root head consistency issues: 3、latest blocking tried consistency issues: 1、blocking recent trail consistency issues: 2 与 verification record consistency issues: 8；现继续同步 workspace-root HEAD~1/HEAD~2、latest tried entry exact snapshot、blocking.tried recent 3 tail order 与 latestAudit.summary，要求复跑后 recent commit consistency issues: 0、root head consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
-- blocking.tried recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增根仓库 origin exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 27/44 节同步落盘 git remote -v: (no output) 与 git remote get-url origin: error: No such remote 'origin'；并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/27/31/36/40/43/44 节的 root remote exact snapshot、latest tried entry、blocking.tried recent 3 tail order 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 root remote consistency issues: 0、recent commit consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
+- blocking.tried recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- blocking.tried recent 3 [2]: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- blocking.tried recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
 - nextSteps[0] exact snapshot: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
 - nextSteps[1] exact snapshot: 待补充测试账号或有效 Supabase 凭据后继续登录后核心页面截图回归
 - nextSteps[2] exact snapshot: 若短期仍无法补齐 Supabase 凭据，则继续把根工作区残余巡检脚本化，优先补充 execution-state.json / VERIFICATION_RECORD.md / latestAudit / 阻塞项 的跨文件显式基线校验，并维持 execution-state.json / VERIFICATION_RECORD.md 与实际验证结果同步；一旦补齐凭据，立即切回真实写库/上传/登录后页面回归。
@@ -1226,10 +1227,10 @@
 - 最近一轮归档审计摘要也必须纳入 `blocking recent trail consistency issues` 统计项，避免只修正文案不修正机读摘要
 
 当前 blocking.tried recent 3 快照：
-- recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，新增根仓库 origin exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 27/44 节同步落盘 git remote -v: (no output) 与 git remote get-url origin: error: No such remote 'origin'；并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/27/31/36/40/43/44 节的 root remote exact snapshot、latest tried entry、blocking.tried recent 3 tail order 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 root remote consistency issues: 0、recent commit consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
-- recent 3 [2]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
-- recent 3 [3]: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
-- tail order exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增根仓库 origin exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 27/44 节同步落盘 git remote -v: (no output) 与 git remote get-url origin: error: No such remote 'origin'；并同步修正 execution-state.json / VERIFICATION_RECORD.md 第 22/26/27/31/36/40/43/44 节的 root remote exact snapshot、latest tried entry、blocking.tried recent 3 tail order 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 root remote consistency issues: 0、recent commit consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS -> 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- recent 3 [2]: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
+- recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
+- tail order exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit command/result/timestamp exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/45 节同步落盘 latestAudit command/result/timestamp exact snapshot、currentStep、execution-state.json、VERIFICATION_RECORD.md、python3 scripts/root_archive_audit.py、PASS；并同步修正 execution-state.json / VERIFICATION_RECORD.md / latestAudit.summary 的 verification section sequence、latest audit snapshot、workspace status 与 root pre-sync anchors 快照；复跑 python3 scripts/root_archive_audit.py 确认 latest audit snapshot consistency issues: 0、verification section sequence issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0，RESULT: PASS -> 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 blocking.tried recent 3 快照与 latestAudit timestamp exact snapshot，要求 blocking.tried 保持 recent 3、no duplicates、tail order，且 VERIFICATION_RECORD.md 第 40/45 节与 execution-state.json -> currentStep 同步落盘 latestAudit timestamp exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
 - duplicate check: no duplicates across recent 3
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.tried recent 3 baseline
 - RESULT: PASS
@@ -1339,8 +1340,8 @@
 当前章节序列快照：
 - VERIFICATION_RECORD.md: section headings synchronized with strict order baseline
 - section headings: strict order preserved across numbered audit sections
-- duplicate check: no duplicates across ### 22..44 numbered audit sections
-- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44., ### 45.
+- duplicate check: no duplicates across ### 22..46 numbered audit sections
+- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44., ### 45., ### 46.
 - RESULT: PASS
 
 结论：
@@ -1404,6 +1405,28 @@
 当前 latestAudit exact snapshot：
 - latestAudit command exact snapshot: python3 scripts/root_archive_audit.py
 - latestAudit result exact snapshot: PASS
-- latestAudit timestamp exact snapshot: 2026-03-09T09:24+08:00
+- latestAudit timestamp exact snapshot: 2026-03-09T09:29+08:00
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latestAudit exact snapshot baseline
+- RESULT: PASS
+
+
+### 46. latestAudit summary label strict order 显式校验
+本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，补强 `scripts/root_archive_audit.py`，把 `### 22. 最近一轮归档审计摘要（机读对照）` 中 `latestAudit.summary` 的条目顺序也纳入显式校验，避免后续虽然各字段和值仍在，但 `timestamp / command / result / summary labels` 的落盘顺序漂移。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 新增 `latest_audit_summary_order_gaps()`，并将结果汇总到 `latest audit summary order issues`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `latestAudit`、`summary`、`strict order`、`LATEST_AUDIT_SUMMARY_LABELS`、`### 22.`、`timestamp -> command -> result`、`execution-state.json`、`VERIFICATION_RECORD.md`、`currentStep`、`RESULT: PASS`
+- 审计脚本会要求 `### 22.` 中最近一轮审计摘要继续保持 `timestamp -> command -> result -> LATEST_AUDIT_SUMMARY_LABELS` 的 strict order
+- 本节必须显式落盘 summary order exact snapshot，避免后续只同步字段和值、不同步顺序基线
+
+实际回归：
+1. 本轮补强 `scripts/root_archive_audit.py`，新增 `latest_audit_summary_order_gaps()` 与 `latest audit summary order issues` 汇总项
+2. 同步回写 `execution-state.json -> currentStep`、`execution-state.json -> latestAudit.summary` 与 `VERIFICATION_RECORD.md -> ### 22./### 43./### 45./本节`，使 `### 22.` 继续保持 `timestamp -> command -> result -> LATEST_AUDIT_SUMMARY_LABELS` 的 strict order
+3. 同步更新 `VERIFICATION_RECORD.md` 顶部时间与 `latestAudit timestamp exact snapshot` 为 `2026-03-09 09:29 (Asia/Shanghai)` / `2026-03-09T09:29+08:00`
+4. 复跑 `python3 scripts/root_archive_audit.py`，要求 `latest audit summary order issues: 0`、`verification section sequence issues: 0`、`verification record consistency issues: 0`、`RESULT: PASS`
+
+当前 summary order exact snapshot：
+- latestAudit / summary / strict order / LATEST_AUDIT_SUMMARY_LABELS / ### 22. / timestamp -> command -> result markers: synchronized in execution-state.json / VERIFICATION_RECORD.md / currentStep
+- summary order exact snapshot: timestamp -> command -> result -> top-level entries checked -> missing README dirs -> empty dirs -> manifest missing entries -> unexpected top-level entries -> archive marker gaps -> navigation marker gaps -> first-screen archive notice gaps -> manifest section issues -> manifest classification issues -> retained baseline issues -> doc reference issues -> blocker consistency issues -> doc timestamp issues -> recent commit consistency issues -> root head consistency issues -> root remote consistency issues -> blocking snapshot consistency issues -> workspace status consistency issues -> blocking status consistency issues -> latest blocking tried consistency issues -> blocking recent trail consistency issues -> latest audit snapshot consistency issues -> verification record consistency issues -> execution plan consistency issues -> completed sequence consistency issues -> fallback route consistency issues -> blocking point consistency issues -> next steps exact consistency issues -> verification section sequence issues -> latest audit summary order issues
+- execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest audit summary strict order baseline
 - RESULT: PASS

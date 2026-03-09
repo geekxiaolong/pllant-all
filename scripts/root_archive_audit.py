@@ -472,6 +472,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocking point consistency issues',
     'next steps exact consistency issues',
     'verification section sequence issues',
+    'latest audit summary order issues',
 )
 
 
@@ -689,6 +690,24 @@ LATEST_AUDIT_SNAPSHOT_REQUIRED_MARKERS = {
     'VERIFICATION_RECORD.md': ('latestAudit', 'command', 'result', 'timestamp', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'python3 scripts/root_archive_audit.py', 'PASS', 'RESULT: PASS'),
 }
 
+VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_HEADING = '### 46. latestAudit summary label strict order 显式校验'
+VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_MARKERS = (
+    'latestAudit',
+    'summary',
+    'strict order',
+    'LATEST_AUDIT_SUMMARY_LABELS',
+    '### 22.',
+    'timestamp -> command -> result',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'RESULT: PASS',
+)
+LATEST_AUDIT_SUMMARY_ORDER_REQUIRED_MARKERS = {
+    'currentStep': ('latestAudit', 'summary', 'strict order', 'LATEST_AUDIT_SUMMARY_LABELS', '### 22.', 'timestamp -> command -> result', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('latestAudit', 'summary', 'strict order', 'LATEST_AUDIT_SUMMARY_LABELS', '### 22.', 'timestamp -> command -> result', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
+}
+
 VERIFICATION_RECORD_SECTION_SEQUENCE_HEADING = '### 43. VERIFICATION_RECORD 章节序号 / 唯一性显式校验'
 VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     'VERIFICATION_RECORD.md',
@@ -703,10 +722,10 @@ VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     'RESULT: PASS',
 )
 VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
-    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
+    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', 'RESULT: PASS'),
 }
-EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 46))
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 47))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -1336,6 +1355,57 @@ def verification_record_summary_section_gaps(
             'VERIFICATION_RECORD audit summary marker missing :: '
             '- command: python3 scripts/root_archive_audit.py'
         )
+
+    return gaps
+
+
+def latest_audit_summary_order_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    current_step = state.get('currentStep', '')
+    for marker in LATEST_AUDIT_SUMMARY_ORDER_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing latest audit summary order marker :: {marker}')
+
+    for marker in LATEST_AUDIT_SUMMARY_ORDER_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing latest audit summary order marker :: {marker}')
+
+    section_22 = extract_heading_section(verification_text, LATEST_AUDIT_SUMMARY_HEADING)
+    if not section_22:
+        gaps.append(f'VERIFICATION_RECORD missing latest audit summary section :: {LATEST_AUDIT_SUMMARY_HEADING}')
+    else:
+        ordered_lines = [
+            '- timestamp: ',
+            '- command: python3 scripts/root_archive_audit.py',
+            '- result: PASS',
+            *[f'- {label}: ' for label in LATEST_AUDIT_SUMMARY_LABELS],
+        ]
+        last_index = -1
+        for line in ordered_lines:
+            idx = section_22.find(line)
+            if idx == -1:
+                gaps.append(f'VERIFICATION_RECORD latest audit summary order marker missing :: {line}')
+                continue
+            if idx <= last_index:
+                gaps.append(f'VERIFICATION_RECORD latest audit summary order mismatch :: {line}')
+            last_index = idx
+
+    section_46 = extract_heading_section(verification_text, VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_HEADING)
+    if not section_46:
+        gaps.append(
+            'VERIFICATION_RECORD missing latest audit summary order section :: '
+            f'{VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_HEADING}'
+        )
+    else:
+        for marker in VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_MARKERS:
+            if marker not in section_46:
+                gaps.append(f'VERIFICATION_RECORD latest audit summary order marker missing :: {marker}')
+        expected_line = '- summary order exact snapshot: timestamp -> command -> result -> ' + ' -> '.join(LATEST_AUDIT_SUMMARY_LABELS)
+        if expected_line not in section_46:
+            gaps.append(f'VERIFICATION_RECORD latest audit summary order marker missing :: {expected_line}')
 
     return gaps
 
@@ -2237,7 +2307,7 @@ def verification_record_section_sequence_gaps() -> list[str]:
     if exact_line not in section_text:
         gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {exact_line}')
 
-    if '- duplicate check: no duplicates across ### 22..44 numbered audit sections' not in section_text:
+    if '- duplicate check: no duplicates across ### 22..46 numbered audit sections' not in section_text:
         gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..44 numbered audit sections')
 
     return gaps
@@ -2342,6 +2412,7 @@ def main() -> int:
     next_steps_exact_issues = next_steps_exact_consistency_gaps()
     verification_section_sequence_issues = verification_record_section_sequence_gaps()
     latest_audit_snapshot_issues = latest_audit_snapshot_consistency_gaps()
+    latest_audit_summary_order_issues = latest_audit_summary_order_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -2383,6 +2454,7 @@ def main() -> int:
         'blocking point consistency issues': len(blocking_point_issues),
         'next steps exact consistency issues': len(next_steps_exact_issues),
         'verification section sequence issues': len(verification_section_sequence_issues),
+        'latest audit summary order issues': len(latest_audit_summary_order_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -2479,6 +2551,9 @@ def main() -> int:
     if verification_section_sequence_issues:
         print('\n[verification section sequence issues]')
         print('\n'.join(verification_section_sequence_issues))
+    if latest_audit_summary_order_issues:
+        print('\n[latest audit summary order issues]')
+        print('\n'.join(latest_audit_summary_order_issues))
 
     failed = bool(
         missing_readmes
@@ -2510,6 +2585,7 @@ def main() -> int:
         or blocking_point_issues
         or next_steps_exact_issues
         or verification_section_sequence_issues
+        or latest_audit_summary_order_issues
     )
     if failed:
         print('\nRESULT: FAIL')
