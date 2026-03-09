@@ -597,17 +597,31 @@ VERIFICATION_RECORD_BLOCKING_SNAPSHOT_MARKERS = (
     'RESULT: PASS',
 )
 
-WORKSPACE_STATUS_ALLOWED_SHORT = ('?? EXECUTION_PLAN.md',)
+WORKSPACE_STATUS_ALLOWED_SHORT = (
+    ' M README.md',
+    ' M ROOT_ARCHIVE_MANIFEST.md',
+    ' M START_HERE.md',
+    ' M THREE-APP-SPLIT-STATUS.md',
+    ' M VERIFICATION_RECORD.md',
+    ' M execution-state.json',
+    '?? EXECUTION_PLAN.md',
+)
 WORKSPACE_STATUS_REQUIRED_MARKERS = {
-    'currentStep': ('git status --short', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('git status --short', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
+    'currentStep': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('git status --short', 'README.md', 'ROOT_ARCHIVE_MANIFEST.md', 'START_HERE.md', 'THREE-APP-SPLIT-STATUS.md', 'VERIFICATION_RECORD.md', 'execution-state.json', '?? EXECUTION_PLAN.md', 'RESULT: PASS'),
 }
 
 VERIFICATION_RECORD_WORKSPACE_STATUS_HEADING = '### 29. 根工作区 git status 显式校验'
 VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
     'git status --short',
+    'README.md',
+    'ROOT_ARCHIVE_MANIFEST.md',
+    'START_HERE.md',
+    'THREE-APP-SPLIT-STATUS.md',
+    'VERIFICATION_RECORD.md',
+    'execution-state.json',
     '?? EXECUTION_PLAN.md',
-    'clean tracked files',
+    'allowed sync baseline dirty files',
     'RESULT: PASS',
 )
 
@@ -1990,20 +2004,22 @@ def workspace_status_consistency_gaps() -> list[str]:
         for line in unexpected:
             gaps.append(f'root git status unexpected dirty entry :: {line}')
 
-    expected_line = WORKSPACE_STATUS_ALLOWED_SHORT[0]
-    if expected_line not in status_lines:
-        gaps.append(f'root git status missing expected entry :: {expected_line}')
+    for expected_line in WORKSPACE_STATUS_ALLOWED_SHORT:
+        if expected_line not in status_lines:
+            gaps.append(f'root git status missing expected entry :: {expected_line}')
 
     if section_text:
-        if f'- git status --short: {expected_line}' not in section_text:
+        for expected_line in WORKSPACE_STATUS_ALLOWED_SHORT:
+            marker = f'- git status --short exact snapshot: {expected_line}'
+            if marker not in section_text:
+                gaps.append(
+                    'VERIFICATION_RECORD workspace status marker missing :: '
+                    f'{marker}'
+                )
+        if '- tracked files: allowed sync baseline dirty files = README.md / START_HERE.md / ROOT_ARCHIVE_MANIFEST.md / THREE-APP-SPLIT-STATUS.md / VERIFICATION_RECORD.md / execution-state.json' not in section_text:
             gaps.append(
                 'VERIFICATION_RECORD workspace status marker missing :: '
-                f'- git status --short: {expected_line}'
-            )
-        if '- tracked files: clean tracked files' not in section_text:
-            gaps.append(
-                'VERIFICATION_RECORD workspace status marker missing :: '
-                '- tracked files: clean tracked files'
+                '- tracked files: allowed sync baseline dirty files = README.md / START_HERE.md / ROOT_ARCHIVE_MANIFEST.md / THREE-APP-SPLIT-STATUS.md / VERIFICATION_RECORD.md / execution-state.json'
             )
 
     return gaps
