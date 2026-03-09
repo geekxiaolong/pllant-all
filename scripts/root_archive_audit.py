@@ -464,6 +464,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'blocking status consistency issues',
     'latest blocking tried consistency issues',
     'blocking recent trail consistency issues',
+    'latest audit snapshot consistency issues',
     'verification record consistency issues',
     'execution plan consistency issues',
     'completed sequence consistency issues',
@@ -670,6 +671,24 @@ NEXT_STEPS_EXACT_REQUIRED_MARKERS = {
     'VERIFICATION_RECORD.md': ('nextSteps', 'nextSteps[0]', 'nextSteps[1]', 'nextSteps[2]', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
 }
 
+VERIFICATION_RECORD_LATEST_AUDIT_SNAPSHOT_HEADING = '### 45. latestAudit command/result/timestamp exact snapshot 显式校验'
+VERIFICATION_RECORD_LATEST_AUDIT_SNAPSHOT_MARKERS = (
+    'latestAudit',
+    'command',
+    'result',
+    'timestamp',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'python3 scripts/root_archive_audit.py',
+    'PASS',
+    'RESULT: PASS',
+)
+LATEST_AUDIT_SNAPSHOT_REQUIRED_MARKERS = {
+    'currentStep': ('latestAudit', 'command', 'result', 'timestamp', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'python3 scripts/root_archive_audit.py', 'PASS', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('latestAudit', 'command', 'result', 'timestamp', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'python3 scripts/root_archive_audit.py', 'PASS', 'RESULT: PASS'),
+}
+
 VERIFICATION_RECORD_SECTION_SEQUENCE_HEADING = '### 43. VERIFICATION_RECORD 章节序号 / 唯一性显式校验'
 VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     'VERIFICATION_RECORD.md',
@@ -687,7 +706,7 @@ VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
     'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
     'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', 'RESULT: PASS'),
 }
-EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 45))
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 46))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -2089,6 +2108,88 @@ def blocking_status_consistency_gaps() -> list[str]:
     return gaps
 
 
+def latest_audit_snapshot_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    latest_audit = state.get('latestAudit', {})
+    if not isinstance(latest_audit, dict):
+        return ['execution-state latestAudit missing or invalid for exact snapshot check']
+
+    command = latest_audit.get('command')
+    result = latest_audit.get('result')
+    timestamp = latest_audit.get('timestamp')
+    if command != 'python3 scripts/root_archive_audit.py':
+        gaps.append(f'execution-state latestAudit.command invalid for exact snapshot check :: {command}')
+    if result != 'PASS':
+        gaps.append(f'execution-state latestAudit.result invalid for exact snapshot check :: {result}')
+    if not isinstance(timestamp, str) or not timestamp.strip():
+        gaps.append('execution-state latestAudit.timestamp missing for exact snapshot check')
+        timestamp = ''
+
+    current_step = state.get('currentStep', '')
+    for marker in LATEST_AUDIT_SNAPSHOT_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing latestAudit snapshot marker :: {marker}')
+
+    for marker in LATEST_AUDIT_SNAPSHOT_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing latestAudit snapshot marker :: {marker}')
+
+    command_line = '- latestAudit command exact snapshot: python3 scripts/root_archive_audit.py'
+    result_line = '- latestAudit result exact snapshot: PASS'
+    timestamp_line = f'- latestAudit timestamp exact snapshot: {timestamp}' if timestamp else ''
+
+    if command_line not in current_step:
+        gaps.append('execution-state currentStep missing latestAudit command exact snapshot line')
+    if result_line not in current_step:
+        gaps.append('execution-state currentStep missing latestAudit result exact snapshot line')
+    if timestamp_line and timestamp_line not in current_step:
+        gaps.append('execution-state currentStep missing latestAudit timestamp exact snapshot line')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_LATEST_AUDIT_SNAPSHOT_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing latestAudit snapshot section :: '
+            f'{VERIFICATION_RECORD_LATEST_AUDIT_SNAPSHOT_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_LATEST_AUDIT_SNAPSHOT_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD latestAudit snapshot marker missing :: {marker}')
+
+    if command_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD latestAudit snapshot marker missing :: {command_line}')
+    if result_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD latestAudit snapshot marker missing :: {result_line}')
+    if timestamp_line and timestamp_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD latestAudit snapshot marker missing :: {timestamp_line}')
+
+    latest_summary_section = extract_heading_section(verification_text, LATEST_AUDIT_SUMMARY_HEADING)
+    if not latest_summary_section:
+        gaps.append(
+            'VERIFICATION_RECORD missing latest audit summary section for latestAudit snapshot cross-check :: '
+            f'{LATEST_AUDIT_SUMMARY_HEADING}'
+        )
+    else:
+        if '- command: python3 scripts/root_archive_audit.py' not in latest_summary_section:
+            gaps.append('VERIFICATION_RECORD latest audit summary missing command marker for latestAudit snapshot cross-check')
+        if '- result: PASS' not in latest_summary_section:
+            gaps.append('VERIFICATION_RECORD latest audit summary missing result marker for latestAudit snapshot cross-check')
+        if timestamp:
+            try:
+                latest_audit_stamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M')
+            except ValueError:
+                gaps.append(f'execution-state latestAudit.timestamp invalid isoformat for exact snapshot check :: {timestamp}')
+            else:
+                if f'- timestamp: {latest_audit_stamp}' not in latest_summary_section:
+                    gaps.append('VERIFICATION_RECORD latest audit summary missing timestamp marker for latestAudit snapshot cross-check')
+
+    return gaps
+
+
 def verification_record_section_sequence_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -2240,6 +2341,7 @@ def main() -> int:
     blocking_point_issues = blocking_point_consistency_gaps()
     next_steps_exact_issues = next_steps_exact_consistency_gaps()
     verification_section_sequence_issues = verification_record_section_sequence_gaps()
+    latest_audit_snapshot_issues = latest_audit_snapshot_consistency_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -2273,6 +2375,7 @@ def main() -> int:
         'blocking status consistency issues': len(blocking_status_issues),
         'latest blocking tried consistency issues': len(latest_blocking_tried_issues),
         'blocking recent trail consistency issues': len(blocking_recent_trail_issues),
+        'latest audit snapshot consistency issues': len(latest_audit_snapshot_issues),
         'verification record consistency issues': 0,
         'execution plan consistency issues': len(execution_plan_issues),
         'completed sequence consistency issues': len(completed_sequence_issues),
@@ -2352,6 +2455,9 @@ def main() -> int:
     if blocking_recent_trail_issues:
         print('\n[blocking recent trail consistency issues]')
         print('\n'.join(blocking_recent_trail_issues))
+    if latest_audit_snapshot_issues:
+        print('\n[latest audit snapshot consistency issues]')
+        print('\n'.join(latest_audit_snapshot_issues))
     if verification_record_issues:
         print('\n[verification record consistency issues]')
         print('\n'.join(verification_record_issues))
@@ -2396,6 +2502,7 @@ def main() -> int:
         or blocking_status_issues
         or latest_blocking_tried_issues
         or blocking_recent_trail_issues
+        or latest_audit_snapshot_issues
         or verification_record_issues
         or execution_plan_issues
         or completed_sequence_issues

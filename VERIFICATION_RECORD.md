@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 09:16 (Asia/Shanghai)
+更新时间：2026-03-09 09:22 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 09:16
+- timestamp: 2026-03-09 09:22
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -621,10 +621,10 @@
 1. 首次执行 `python3 scripts/root_archive_audit.py`
    - 命中 `verification record consistency issues: 1`
    - 具体缺口：
-     - `VERIFICATION_RECORD.md` 缺少 `- timestamp: 2026-03-09 08:31`
+     - `VERIFICATION_RECORD.md` 缺少 `- timestamp: 2026-03-09 09:22`
    - 输出 `RESULT: FAIL`
 2. 修正方式：
-   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 05:41`
+   - 为 `VERIFICATION_RECORD.md -> 最近一轮归档审计摘要（机读对照）` 补齐 `- timestamp: 2026-03-09 09:22`
    - 同步回写 `execution-state.json -> updatedAt`、`currentStep` 与 `latestAudit.timestamp`
 3. 修正后复跑 `python3 scripts/root_archive_audit.py`
    - `verification record consistency issues: 0`
@@ -1340,7 +1340,7 @@
 - VERIFICATION_RECORD.md: section headings synchronized with strict order baseline
 - section headings: strict order preserved across numbered audit sections
 - duplicate check: no duplicates across ### 22..44 numbered audit sections
-- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44.
+- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44., ### 45.
 - RESULT: PASS
 
 结论：
@@ -1373,3 +1373,37 @@
 结论：
 - 根工作区归档巡检现已覆盖“根仓库 origin 缺失的真实 Git 命令输出是否仍在 execution-state.json / currentStep / VERIFICATION_RECORD.md 三侧精确同步”这一层约束
 - 后续若 cron 只写 blocker 关键词、遗漏 exact snapshot，脚本会直接 FAIL，进一步降低 root remote 状态记录漂移风险
+
+
+### 45. latestAudit command/result/timestamp exact snapshot 显式校验
+本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，补强 `scripts/root_archive_audit.py`，把 `latestAudit.command` / `latestAudit.result` / `latestAudit.timestamp` 也纳入 exact snapshot 显式校验，避免后续只同步 summary 数字，却让最近一轮审计元信息在 `execution-state.json`、`currentStep`、`VERIFICATION_RECORD.md` 三侧漂移。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 新增 `latest_audit_snapshot_consistency_gaps()`，并将结果汇总到 `latest audit snapshot consistency issues`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `latestAudit`、`command`、`result`、`timestamp`、`execution-state.json`、`VERIFICATION_RECORD.md`、`currentStep`、`python3 scripts/root_archive_audit.py`、`PASS`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并显式落盘 latestAudit command/result/timestamp 的 exact snapshot
+- `### 22. 最近一轮归档审计摘要（机读对照）` 也必须继续包含同一组 command/result/timestamp 标记，避免 summary 节与 exact snapshot 节分叉
+
+实际回归：
+1. 首次执行 `python3 scripts/root_archive_audit.py`
+   - 命中 `latest audit snapshot consistency issues: 6`
+   - 同时因正在修改 `scripts/root_archive_audit.py` 命中 `workspace status consistency issues: 1`
+   - 并因新增字段尚未回写摘要，额外命中 `verification record consistency issues` 与 `verification section sequence issues`
+   - 输出 `RESULT: FAIL`
+2. 修正方式：
+   - 同步回写 `execution-state.json -> currentStep`、`execution-state.json -> latestAudit.summary`
+   - 在 `VERIFICATION_RECORD.md` 新增本节，并补齐 `### 43.` 的章节序列快照到 `### 45.`
+   - 同步更新 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部时间为 `2026-03-09 09:22 (Asia/Shanghai)`
+3. 修正后复跑 `python3 scripts/root_archive_audit.py`
+   - `latest audit snapshot consistency issues: 0`
+   - `verification section sequence issues: 0`
+   - `workspace status consistency issues: 0`
+   - `verification record consistency issues: 0`
+   - `RESULT: PASS`
+
+当前 latestAudit exact snapshot：
+- latestAudit command exact snapshot: python3 scripts/root_archive_audit.py
+- latestAudit result exact snapshot: PASS
+- latestAudit timestamp exact snapshot: 2026-03-09T09:22+08:00
+- execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latestAudit exact snapshot baseline
+- RESULT: PASS
