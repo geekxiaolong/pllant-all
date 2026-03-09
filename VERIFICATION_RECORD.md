@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 08:01 (Asia/Shanghai)
+更新时间：2026-03-09 08:06 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 08:01
+- timestamp: 2026-03-09 08:06
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -726,10 +726,10 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb, 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
-- workspace-root HEAD~1: 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb
-- workspace-root HEAD~2: 2f24912e4d9e2d8aba5a0abb2189d590b8cfc8fa
+- workspace-root: latest local HEAD f9b4c41c76b802a0c277eda3ec905823e0dfe243 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): f9b4c41c76b802a0c277eda3ec905823e0dfe243, 04495e412aa830d866b50a7b79a5e2112d8c3bc5
+- workspace-root HEAD~1: f9b4c41c76b802a0c277eda3ec905823e0dfe243
+- workspace-root HEAD~2: 04495e412aa830d866b50a7b79a5e2112d8c3bc5
 - workspace-root pre-sync command: git log -3 --format=%H
 
 结论：
@@ -814,9 +814,9 @@
 - 根工作区仓库仍未配置可用 `origin`
 
 当前 blocking.tried 最近 3 条：
-- 本轮已同步修正主导航文档更新时间、VERIFICATION_RECORD.md 第 28/31 节与 execution-state.json pre-sync 锚点，要求 README.md、START_HERE.md、ROOT_ARCHIVE_MANIFEST.md、THREE-APP-SPLIT-STATUS.md 与 latestAudit/working tree/head anchors 保持一致；提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、verification record consistency issues: 0，RESULT: PASS
 - 本轮已同步修正 VERIFICATION_RECORD.md 第 28 节 recent 3 条阻塞快照与 latestAudit 摘要时间戳，要求 blocking.tried[-3:]、主导航文档更新时间与 root pre-sync anchors 保持一致；提交后复跑 python3 scripts/root_archive_audit.py 确认 blocking snapshot consistency issues: 0、verification record consistency issues: 0、doc timestamp issues: 0、root head consistency issues: 0，RESULT: PASS
 - 本轮已补强 scripts/root_archive_audit.py，将 VERIFICATION_RECORD.md 纳入 doc timestamp issues 顶部更新时间显式校验，并同步回写 5 份主导航/验证文档顶部时间与 pre-sync anchors；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、verification record consistency issues: 0、root head consistency issues: 0，RESULT: PASS
+- 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 root pre-sync anchors 与顶部更新时间，要求 workspace-root HEAD~1/HEAD~2、recentCommits.workspace-root、latestAudit.timestamp 及 5 份主导航/验证文档时间戳保持一致；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0，RESULT: PASS
 
 当前 nextSteps 快照：
 - nextSteps[0]: 待补充 SUPABASE_SERVICE_ROLE_KEY 后执行真实写库/存储联调
@@ -939,7 +939,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 98bd5a42b0fc7dcb0632731902ae0215cbdc20eb
+- workspace-root HEAD~1 anchor: f9b4c41c76b802a0c277eda3ec905823e0dfe243
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -1160,7 +1160,7 @@
    - `RESULT: PASS`
 
 当前 latest tried entry 快照：
-- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，将 VERIFICATION_RECORD.md 纳入 doc timestamp issues 顶部更新时间显式校验，并同步回写 5 份主导航/验证文档顶部时间与 pre-sync anchors；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、verification record consistency issues: 0、root head consistency issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已同步修正 execution-state.json / VERIFICATION_RECORD.md 的 root pre-sync anchors 与顶部更新时间，要求 workspace-root HEAD~1/HEAD~2、recentCommits.workspace-root、latestAudit.timestamp 及 5 份主导航/验证文档时间戳保持一致；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0，RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest tried entry baseline
 - blocking.tried: latest tried entry preserved as the newest blocking attempt record
 - RESULT: PASS
@@ -1206,7 +1206,7 @@
 
 实际回归：
 1. 本轮补强 `scripts/root_archive_audit.py`，把 `VERIFICATION_RECORD.md` 加入 `DOC_TIMESTAMP_REQUIREMENTS`，使顶部时间戳同步问题归入 `doc timestamp issues` 审计路径
-2. 同步回写 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部时间为 `2026-03-09 08:01 (Asia/Shanghai)`
+2. 同步回写 `README.md`、`START_HERE.md`、`ROOT_ARCHIVE_MANIFEST.md`、`THREE-APP-SPLIT-STATUS.md`、`VERIFICATION_RECORD.md` 顶部时间为 `2026-03-09 08:06 (Asia/Shanghai)`
 3. 同步回写 `execution-state.json -> updatedAt`、`latestAudit.timestamp`、`currentStep`、`recentCommits.workspace-root` 与 `blocking.tried[-1]`，使 pre-sync anchors 对齐 `workspace-root HEAD~1={head1}`、`workspace-root HEAD~2={head2}`
 4. 复跑 `python3 scripts/root_archive_audit.py`，确认 `doc timestamp issues: 0`、`verification record consistency issues: 0`、`root head consistency issues: 0`、`RESULT: PASS`
 
