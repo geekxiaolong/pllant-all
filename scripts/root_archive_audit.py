@@ -461,6 +461,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'root remote consistency issues',
     'blocking snapshot consistency issues',
     'workspace status consistency issues',
+    'subrepo workspace status consistency issues',
     'blocking status consistency issues',
     'latest blocking tried consistency issues',
     'blocking recent trail consistency issues',
@@ -608,6 +609,37 @@ VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
     'RESULT: PASS',
 )
 
+SUBREPO_WORKSPACE_STATUS_EXPECTED = {
+    'heart-plant': (
+        'M src/app/pages/UserLogin.tsx',
+        'M src/app/utils/api.ts',
+        'M utils/supabase/info.tsx',
+    ),
+    'heart-plant-admin': (
+        'M src/app/utils/api.ts',
+        'M utils/supabase/info.tsx',
+    ),
+    'heart-plant-api': (
+        'M deno.json',
+    ),
+}
+SUBREPO_WORKSPACE_STATUS_REQUIRED_MARKERS = {
+    'currentStep': ('subrepo git status --short', 'heart-plant', 'heart-plant-admin', 'heart-plant-api', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('subrepo git status --short', 'heart-plant', 'heart-plant-admin', 'heart-plant-api', 'RESULT: PASS'),
+}
+VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_HEADING = '### 47. 三端子仓库 git status exact snapshot 显式校验'
+VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_MARKERS = (
+    'subrepo git status --short',
+    'heart-plant',
+    'heart-plant-admin',
+    'heart-plant-api',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'exact snapshot',
+    'RESULT: PASS',
+)
+
 BLOCKING_STATUS_REQUIRED_MARKERS = {
     'currentStep': ('blocking.status', 'partial', 'RESULT: PASS'),
     'VERIFICATION_RECORD.md': ('blocking.status', 'partial', 'RESULT: PASS'),
@@ -722,10 +754,10 @@ VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     'RESULT: PASS',
 )
 VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
-    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', 'RESULT: PASS'),
+    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', 'RESULT: PASS'),
 }
-EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 47))
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 48))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -1929,6 +1961,55 @@ def workspace_status_consistency_gaps() -> list[str]:
     return gaps
 
 
+def subrepo_workspace_status_consistency_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+    current_step = state.get('currentStep', '')
+
+    for marker in SUBREPO_WORKSPACE_STATUS_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing subrepo workspace status marker :: {marker}')
+
+    for marker in SUBREPO_WORKSPACE_STATUS_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing subrepo workspace status marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing subrepo workspace status section :: '
+            f'{VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD subrepo workspace status marker missing :: {marker}')
+
+    for repo_name, expected_lines in sorted(SUBREPO_WORKSPACE_STATUS_EXPECTED.items()):
+        repo_path = ROOT / repo_name
+        try:
+            actual_lines = tuple(git_status_short(repo_path))
+        except RuntimeError as exc:
+            gaps.append(f'subrepo git status lookup failed :: {repo_name} -> {exc}')
+            continue
+        if actual_lines != expected_lines:
+            gaps.append(
+                'subrepo git status exact snapshot mismatch :: '
+                f'{repo_name} actual={actual_lines} expected={expected_lines}'
+            )
+        if f'- {repo_name} status count: {len(expected_lines)}' not in section_text:
+            gaps.append(f'VERIFICATION_RECORD subrepo workspace status marker missing :: - {repo_name} status count: {len(expected_lines)}')
+        for line in expected_lines:
+            exact_line = f'- {repo_name} exact snapshot: {line}'
+            if exact_line not in section_text:
+                gaps.append(f'VERIFICATION_RECORD subrepo workspace status marker missing :: {exact_line}')
+            if line not in current_step:
+                gaps.append(f'execution-state currentStep missing subrepo workspace exact snapshot :: {repo_name} -> {line}')
+
+    return gaps
+
 
 def blocking_recent_trail_consistency_gaps() -> list[str]:
     gaps: list[str] = []
@@ -2336,8 +2417,8 @@ def verification_record_section_sequence_gaps() -> list[str]:
     if exact_line not in section_text:
         gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {exact_line}')
 
-    if '- duplicate check: no duplicates across ### 22..46 numbered audit sections' not in section_text:
-        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..46 numbered audit sections')
+    if '- duplicate check: no duplicates across ### 22..47 numbered audit sections' not in section_text:
+        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..47 numbered audit sections')
 
     return gaps
 
@@ -2431,6 +2512,7 @@ def main() -> int:
     root_remote_issues = root_remote_consistency_gaps()
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
+    subrepo_workspace_status_issues = subrepo_workspace_status_consistency_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
     latest_blocking_tried_issues = latest_blocking_tried_consistency_gaps()
     blocking_recent_trail_issues = blocking_recent_trail_consistency_gaps()
@@ -2472,6 +2554,7 @@ def main() -> int:
         'root remote consistency issues': len(root_remote_issues),
         'blocking snapshot consistency issues': len(blocking_snapshot_issues),
         'workspace status consistency issues': len(workspace_status_issues),
+        'subrepo workspace status consistency issues': len(subrepo_workspace_status_issues),
         'blocking status consistency issues': len(blocking_status_issues),
         'latest blocking tried consistency issues': len(latest_blocking_tried_issues),
         'blocking recent trail consistency issues': len(blocking_recent_trail_issues),
@@ -2547,6 +2630,9 @@ def main() -> int:
     if workspace_status_issues:
         print('\n[workspace status consistency issues]')
         print('\n'.join(workspace_status_issues))
+    if subrepo_workspace_status_issues:
+        print('\n[subrepo workspace status consistency issues]')
+        print('\n'.join(subrepo_workspace_status_issues))
     if blocking_status_issues:
         print('\n[blocking status consistency issues]')
         print('\n'.join(blocking_status_issues))
@@ -2603,6 +2689,7 @@ def main() -> int:
         or root_remote_issues
         or blocking_snapshot_issues
         or workspace_status_issues
+        or subrepo_workspace_status_issues
         or blocking_status_issues
         or latest_blocking_tried_issues
         or blocking_recent_trail_issues
