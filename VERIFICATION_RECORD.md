@@ -623,8 +623,8 @@
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
 - workspace-root: latest local HEAD d49d8c3d7e7efc11a4ba5f3e980298cb45feb440 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
 - workspace-root recent local heads (pre-sync latest 2): d49d8c3d7e7efc11a4ba5f3e980298cb45feb440, 01d9d56a209a5eda1b7477fe45a303b805bc9d5e
-- workspace-root HEAD~1: 01d9d56a209a5eda1b7477fe45a303b805bc9d5e
-- workspace-root HEAD~2: 7aafab342692bd202044a4586aad83be49494d19
+- workspace-root HEAD~1: 1a3be957a270f626f0de195963823f8464f23a90
+- workspace-root HEAD~2: d49d8c3d7e7efc11a4ba5f3e980298cb45feb440
 - workspace-root pre-sync command: git log -3 --format=%H
 - workspace-root git log -3 pre-sync window exact snapshot: d49d8c3d7e7efc11a4ba5f3e980298cb45feb440 -> 01d9d56a209a5eda1b7477fe45a303b805bc9d5e
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无缩写
@@ -661,8 +661,8 @@
 ### 31. 根仓库 current HEAD 显式校验
 - git rev-parse HEAD: 7873b62b64320148d6658dddbf0ddd8dae5a05ed
 - workspace-root current HEAD exact snapshot: d49d8c3d7e7efc11a4ba5f3e980298cb45feb440
-- workspace-root HEAD~1 anchor: 01d9d56a209a5eda1b7477fe45a303b805bc9d5e
-- workspace-root HEAD~2 anchor: 7aafab342692bd202044a4586aad83be49494d19
+- workspace-root HEAD~1 anchor: 1a3be957a270f626f0de195963823f8464f23a90
+- workspace-root HEAD~2 anchor: d49d8c3d7e7efc11a4ba5f3e980298cb45feb440
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 / HEAD~2 plus git rev-parse HEAD command visibility
 - currentStep / execution-state.json / VERIFICATION_RECORD.md: synchronized with the same root-head baseline
 - RESULT: PASS
