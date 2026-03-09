@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 10:13 (Asia/Shanghai)
+更新时间：2026-03-09 10:20 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 10:13
+- timestamp: 2026-03-09 10:20
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -714,7 +714,7 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD adeebe2c65601e7d74c8b566de2af1d9537921f0 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root: latest local HEAD decf376d5f5835744a815284a18a7197204fdbcf (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
 - workspace-root recent local heads (pre-sync latest 2): decf376d5f5835744a815284a18a7197204fdbcf, fd0e50cc2b0a4fa993a4834cf069c62539b97be2
 - workspace-root HEAD~1: decf376d5f5835744a815284a18a7197204fdbcf
 - workspace-root HEAD~2: fd0e50cc2b0a4fa993a4834cf069c62539b97be2
@@ -797,6 +797,11 @@
 - 根工作区归档巡检现已覆盖“blocking 快照与续跑清单是否在 execution-state.json / VERIFICATION_RECORD.md / latestAudit 三侧显式同步”这一层约束
 - 后续若 cron 只更新阻塞快照的一侧、漏同步 `blocking.tried` 或 `nextSteps`，脚本会直接 FAIL，进一步降低续跑记录漂移风险
 
+- recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，修正 verification_record_section_sequence_gaps() 的重复章节范围提示文案 22..44 -> 22..46，并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 root pre-sync anchors、workspace-root recentCommits、latestAudit timestamp exact snapshot 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、workspace status consistency issues: 0、latest audit snapshot consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- recent 3 [2]: 本轮已补强 scripts/root_archive_audit.py，在 blocking_point_consistency_gaps() 中新增 root pre-sync anchors exact snapshot 校验，要求 execution-state.json -> blocking.point / currentStep 与 VERIFICATION_RECORD.md 第 28/39 节同步落盘 workspace-root HEAD~1、HEAD~2 精确锚点；并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 updatedAt、latestAudit timestamp exact snapshot、workspace-root recentCommits 与 blocking.point exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、blocking point consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0、latest audit snapshot consistency issues: 0，RESULT: PASS
+- recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
+- tail order exact snapshot: 本轮已补强 scripts/root_archive_audit.py，修正 verification_record_section_sequence_gaps() 的重复章节范围提示文案 22..44 -> 22..46，并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 root pre-sync anchors、workspace-root recentCommits、latestAudit timestamp exact snapshot 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、workspace status consistency issues: 0、latest audit snapshot consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，在 blocking_point_consistency_gaps() 中新增 root pre-sync anchors exact snapshot 校验，要求 execution-state.json -> blocking.point / currentStep 与 VERIFICATION_RECORD.md 第 28/39 节同步落盘 workspace-root HEAD~1、HEAD~2 精确锚点；并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 updatedAt、latestAudit timestamp exact snapshot、workspace-root recentCommits 与 blocking.point exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、blocking point consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0、latest audit snapshot consistency issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
 ### 29. 根工作区 git status 显式校验
 本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback 路线，补强 `scripts/root_archive_audit.py`，把根工作区 `git status --short` 也纳入跨文件显式校验，避免续跑时“工作区是否真的只剩计划文件未跟踪”与状态记录漂移。
 
@@ -1118,6 +1123,8 @@
 - 后续若 cron 只追加了阻塞尝试列表，却漏掉 `currentStep` / 验证记录中的同一条最新摘要，脚本会直接 FAIL，进一步降低最近一轮尝试记录漂移风险
 
 
+- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
+
 ### 37. 三端子仓库 origin 显式校验
 本轮继续沿着 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，在无法立即补齐 Supabase 凭据时，继续把跨仓库状态指针校验脚本化：除了 `git rev-parse HEAD` 之外，再把三端子仓库 `origin` 远端 URL 也纳入 `VERIFICATION_RECORD.md` 与 `execution-state.json -> currentStep` 的显式同步范围。
 
@@ -1200,6 +1207,10 @@
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.tried recent 3 baseline
 - RESULT: PASS
 
+- recent 3 [1]: 本轮已补强 scripts/root_archive_audit.py，修正 verification_record_section_sequence_gaps() 的重复章节范围提示文案 22..44 -> 22..46，并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 root pre-sync anchors、workspace-root recentCommits、latestAudit timestamp exact snapshot 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、workspace status consistency issues: 0、latest audit snapshot consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- recent 3 [2]: 本轮已补强 scripts/root_archive_audit.py，在 blocking_point_consistency_gaps() 中新增 root pre-sync anchors exact snapshot 校验，要求 execution-state.json -> blocking.point / currentStep 与 VERIFICATION_RECORD.md 第 28/39 节同步落盘 workspace-root HEAD~1、HEAD~2 精确锚点；并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 updatedAt、latestAudit timestamp exact snapshot、workspace-root recentCommits 与 blocking.point exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、blocking point consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0、latest audit snapshot consistency issues: 0，RESULT: PASS
+- recent 3 [3]: 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
+- tail order exact snapshot: 本轮已补强 scripts/root_archive_audit.py，修正 verification_record_section_sequence_gaps() 的重复章节范围提示文案 22..44 -> 22..46，并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 root pre-sync anchors、workspace-root recentCommits、latestAudit timestamp exact snapshot 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、workspace status consistency issues: 0、latest audit snapshot consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，在 blocking_point_consistency_gaps() 中新增 root pre-sync anchors exact snapshot 校验，要求 execution-state.json -> blocking.point / currentStep 与 VERIFICATION_RECORD.md 第 28/39 节同步落盘 workspace-root HEAD~1、HEAD~2 精确锚点；并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 updatedAt、latestAudit timestamp exact snapshot、workspace-root recentCommits 与 blocking.point exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、blocking snapshot consistency issues: 0、blocking point consistency issues: 0、workspace status consistency issues: 0、verification record consistency issues: 0、latest audit snapshot consistency issues: 0，RESULT: PASS -> 本轮已补强 scripts/root_archive_audit.py，新增 recentCommits.workspace-root exact snapshot 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 26/43/48 节同步落盘 recentCommits.workspace-root、latest local HEAD、pre-sync anchor = HEAD~1、### 48. 与 workspace-root exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 workspace status consistency issues: 0、verification record consistency issues: 0、verification section sequence issues: 0，RESULT: PASS
 ### 41. 子仓库 recentCommits / origin exact snapshot 显式校验
 本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，在既有 `recentCommits` / `origin` 关键词校验基础上，继续把三端子仓库的 **精确 40 位哈希与 origin URL 快照** 纳入 `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 的显式同步范围，避免后续只写“已校验 origin / recentCommits”，却没有把具体快照落盘。
 
@@ -1291,14 +1302,14 @@
 新增校验项：
 - `scripts/root_archive_audit.py` 新增 `verification_record_section_sequence_gaps()`，并将结果汇总到 `verification section sequence issues`
 - `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `VERIFICATION_RECORD.md`、`section headings`、`strict order`、`no duplicates`、`### 22.`、`### 23.`、`### 41.`、`### 42.`、`### 43.`、`RESULT: PASS`
-- 审计脚本会要求 `VERIFICATION_RECORD.md` 中编号化审计章节按 `### 22.` 到 `### 47.` 严格递增且唯一
+- 审计脚本会要求 `VERIFICATION_RECORD.md` 中编号化审计章节按 `### 22.` 到 `### 48.` 严格递增且唯一
 - 本节必须显式落盘完整章节序列快照与去重结论，避免后续只修复文案、不修复结构
 
 当前章节序列快照：
 - VERIFICATION_RECORD.md: section headings synchronized with strict order baseline
 - section headings: strict order preserved across numbered audit sections
-- duplicate check: no duplicates across ### 22..47 numbered audit sections
-- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44., ### 45., ### 46., ### 47.
+- duplicate check: no duplicates across ### 22..48 numbered audit sections
+- section heading sequence exact snapshot: ### 22., ### 23., ### 24., ### 25., ### 26., ### 27., ### 28., ### 29., ### 30., ### 31., ### 32., ### 33., ### 34., ### 35., ### 36., ### 37., ### 38., ### 39., ### 40., ### 41., ### 42., ### 43., ### 44., ### 45., ### 46., ### 47., ### 48.
 - RESULT: PASS
 
 结论：
@@ -1348,6 +1359,8 @@
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latestAudit exact snapshot baseline
 - RESULT: PASS
 
+- latestAudit timestamp exact snapshot: 2026-03-09T10:20+08:00
+
 ### 46. latestAudit summary label strict order 显式校验
 本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，补强 `scripts/root_archive_audit.py`，把 `### 22. 最近一轮归档审计摘要（机读对照）` 中 `latestAudit.summary` 的条目顺序也纳入显式校验，避免后续虽然各字段和值仍在，但 `timestamp / command / result / summary labels` 的落盘顺序漂移。
 
@@ -1390,3 +1403,23 @@
 结论：
 - 根工作区归档巡检现已覆盖“三端子仓库当前 git status --short 精确快照是否仍在 execution-state.json / currentStep / VERIFICATION_RECORD.md 三侧显式同步”这一层约束
 - 后续若 cron 只同步根仓库状态、却漏掉三端子仓库 dirty working tree 变化，脚本会直接 FAIL，进一步降低跨仓库续跑上下文漂移风险
+
+### 48. recentCommits.workspace-root exact snapshot 显式校验
+本轮继续沿 `execution-state.json -> nextSteps[2]` 的 fallback route 推进，补强 `scripts/root_archive_audit.py`，把 `recentCommits.workspace-root` 这条根仓库 pre-sync 描述本身也纳入 exact snapshot 校验，避免后续只同步其中的 `HEAD~1` 哈希，而整条状态文案与 `execution-state.json` / `VERIFICATION_RECORD.md` / `currentStep` 漂移。
+
+新增校验项：
+- `scripts/root_archive_audit.py` 新增 `workspace_root_recent_commits_snapshot_gaps()`，并将 `recentCommits.workspace-root` exact snapshot 缺口并入 `verification record consistency issues`
+- `execution-state.json -> currentStep` 与 `VERIFICATION_RECORD.md` 必须显式命中 `recentCommits.workspace-root`、`latest local HEAD`、`pre-sync anchor = HEAD~1`、`RESULT: PASS`
+- `VERIFICATION_RECORD.md` 必须新增本节，并显式落盘 `recentCommits.workspace-root exact snapshot`
+- `VERIFICATION_RECORD.md -> ### 26. recentCommits 与仓库 HEAD 显式校验` 也必须继续保留同一条 `workspace-root` exact snapshot，避免 recentCommits 段与 exact snapshot 段分叉
+
+当前 workspace-root exact snapshot：
+- recentCommits.workspace-root exact snapshot: latest local HEAD decf376d5f5835744a815284a18a7197204fdbcf (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same workspace-root recentCommits exact snapshot baseline
+- workspace-root HEAD~1 exact snapshot: decf376d5f5835744a815284a18a7197204fdbcf
+- workspace-root HEAD~2 exact snapshot: fd0e50cc2b0a4fa993a4834cf069c62539b97be2
+- RESULT: PASS
+
+结论：
+- 根工作区归档巡检现已覆盖 `recentCommits.workspace-root` 整条 pre-sync 描述是否仍在 execution-state.json / VERIFICATION_RECORD.md / currentStep 三侧精确同步这一层约束
+- 后续若 cron 只更新 `HEAD~1` 哈希、却让 `latest local HEAD ... (pre-sync anchor = HEAD~1 ...)` 这条状态文案漂移，脚本会直接 FAIL，进一步降低根仓库 pre-sync 状态描述失真风险

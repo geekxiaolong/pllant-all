@@ -640,6 +640,22 @@ VERIFICATION_RECORD_SUBREPO_WORKSPACE_STATUS_MARKERS = (
     'RESULT: PASS',
 )
 
+VERIFICATION_RECORD_WORKSPACE_ROOT_RECENT_COMMITS_HEADING = '### 48. recentCommits.workspace-root exact snapshot 显式校验'
+VERIFICATION_RECORD_WORKSPACE_ROOT_RECENT_COMMITS_MARKERS = (
+    'recentCommits.workspace-root',
+    'workspace-root',
+    'latest local HEAD',
+    'pre-sync anchor = HEAD~1',
+    'execution-state.json',
+    'VERIFICATION_RECORD.md',
+    'currentStep',
+    'RESULT: PASS',
+)
+WORKSPACE_ROOT_RECENT_COMMITS_REQUIRED_MARKERS = {
+    'currentStep': ('recentCommits.workspace-root', 'workspace-root', 'latest local HEAD', 'pre-sync anchor = HEAD~1', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('recentCommits.workspace-root', 'workspace-root', 'latest local HEAD', 'pre-sync anchor = HEAD~1', 'RESULT: PASS'),
+}
+
 BLOCKING_STATUS_REQUIRED_MARKERS = {
     'currentStep': ('blocking.status', 'partial', 'RESULT: PASS'),
     'VERIFICATION_RECORD.md': ('blocking.status', 'partial', 'RESULT: PASS'),
@@ -751,13 +767,14 @@ VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
     '### 41.',
     '### 42.',
     '### 43.',
+    '### 48.',
     'RESULT: PASS',
 )
 VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
-    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', 'RESULT: PASS'),
-    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', 'RESULT: PASS'),
+    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', '### 48.', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', '### 44.', '### 45.', '### 46.', '### 47.', '### 48.', 'RESULT: PASS'),
 }
-EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 48))
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 49))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -1961,6 +1978,79 @@ def workspace_status_consistency_gaps() -> list[str]:
     return gaps
 
 
+def workspace_root_recent_commits_snapshot_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    recent_commits = state.get('recentCommits', {})
+    if not isinstance(recent_commits, dict):
+        return ['execution-state recentCommits missing or invalid for workspace-root exact snapshot check']
+
+    workspace_root_value = recent_commits.get('workspace-root')
+    if not isinstance(workspace_root_value, str) or not workspace_root_value.strip():
+        return ['execution-state recentCommits.workspace-root missing or empty for exact snapshot check']
+
+    try:
+        recent_heads = git_recent_heads(ROOT, limit=3)
+    except RuntimeError as exc:
+        return [f'root recent head lookup failed during workspace-root exact snapshot check :: {exc}']
+
+    if len(recent_heads) < 2:
+        return [f'root recent head lookup returned too few commits during workspace-root exact snapshot check :: {recent_heads}']
+
+    expected_snapshot = (
+        f'latest local HEAD {recent_heads[1]} '
+        '(pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)'
+    )
+    if workspace_root_value != expected_snapshot:
+        gaps.append(
+            'execution-state recentCommits.workspace-root exact snapshot mismatch :: '
+            f'recorded={workspace_root_value} expected={expected_snapshot}'
+        )
+
+    current_step = state.get('currentStep', '')
+    for marker in WORKSPACE_ROOT_RECENT_COMMITS_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing workspace-root recentCommits exact marker :: {marker}')
+    exact_line = f'recentCommits.workspace-root exact snapshot: {expected_snapshot}'
+    if exact_line not in current_step:
+        gaps.append('execution-state currentStep missing workspace-root recentCommits exact snapshot line')
+
+    for marker in WORKSPACE_ROOT_RECENT_COMMITS_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing workspace-root recentCommits exact marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_WORKSPACE_ROOT_RECENT_COMMITS_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing workspace-root recentCommits exact section :: '
+            f'{VERIFICATION_RECORD_WORKSPACE_ROOT_RECENT_COMMITS_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_WORKSPACE_ROOT_RECENT_COMMITS_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD workspace-root recentCommits exact marker missing :: {marker}')
+
+    section_line = f'- recentCommits.workspace-root exact snapshot: {expected_snapshot}'
+    if section_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD workspace-root recentCommits exact marker missing :: {section_line}')
+
+    recent_commit_section = extract_heading_section(verification_text, VERIFICATION_RECORD_RECENT_COMMITS_HEADING)
+    if not recent_commit_section:
+        gaps.append(
+            'VERIFICATION_RECORD missing recent commit section for workspace-root exact cross-check :: '
+            f'{VERIFICATION_RECORD_RECENT_COMMITS_HEADING}'
+        )
+    else:
+        cross_line = f'- workspace-root: {expected_snapshot}'
+        if cross_line not in recent_commit_section:
+            gaps.append(f'VERIFICATION_RECORD recent commit section missing workspace-root exact snapshot :: {cross_line}')
+
+    return gaps
+
+
 def subrepo_workspace_status_consistency_gaps() -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -2513,6 +2603,7 @@ def main() -> int:
     blocking_snapshot_issues = blocking_snapshot_consistency_gaps()
     workspace_status_issues = workspace_status_consistency_gaps()
     subrepo_workspace_status_issues = subrepo_workspace_status_consistency_gaps()
+    workspace_root_recent_commits_snapshot_issues = workspace_root_recent_commits_snapshot_gaps()
     blocking_status_issues = blocking_status_consistency_gaps()
     latest_blocking_tried_issues = latest_blocking_tried_consistency_gaps()
     blocking_recent_trail_issues = blocking_recent_trail_consistency_gaps()
@@ -2568,7 +2659,7 @@ def main() -> int:
         'verification section sequence issues': len(verification_section_sequence_issues),
         'latest audit summary order issues': len(latest_audit_summary_order_issues),
     }
-    verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
+    verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts) + workspace_root_recent_commits_snapshot_issues
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
 
     print('== Root archive audit ==')
@@ -2633,6 +2724,9 @@ def main() -> int:
     if subrepo_workspace_status_issues:
         print('\n[subrepo workspace status consistency issues]')
         print('\n'.join(subrepo_workspace_status_issues))
+    if workspace_root_recent_commits_snapshot_issues:
+        print('\n[workspace-root recentCommits exact snapshot issues]')
+        print('\n'.join(workspace_root_recent_commits_snapshot_issues))
     if blocking_status_issues:
         print('\n[blocking status consistency issues]')
         print('\n'.join(blocking_status_issues))
@@ -2690,6 +2784,7 @@ def main() -> int:
         or blocking_snapshot_issues
         or workspace_status_issues
         or subrepo_workspace_status_issues
+        or workspace_root_recent_commits_snapshot_issues
         or blocking_status_issues
         or latest_blocking_tried_issues
         or blocking_recent_trail_issues
