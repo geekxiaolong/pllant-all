@@ -1,6 +1,6 @@
 # 三端分离验证记录
 
-更新时间：2026-03-09 09:29 (Asia/Shanghai)
+更新时间：2026-03-09 09:41 (Asia/Shanghai)
 
 ## 本轮目标
 - 完成 B8：用户端 UI 一致性检查
@@ -572,7 +572,7 @@
 - `scripts/root_archive_audit.py` 会将实时统计结果与 `execution-state.json -> latestAudit.summary`、本节明细做一一对照，任何一侧漂移都会直接触发 `RESULT: FAIL`
 
 最新审计摘要：
-- timestamp: 2026-03-09 09:29
+- timestamp: 2026-03-09 09:41
 - command: python3 scripts/root_archive_audit.py
 - result: PASS
 - top-level entries checked: 57
@@ -713,10 +713,10 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f, 14ee7958f85a6301f4c86b7fb08452e5d4ba9542
-- workspace-root HEAD~1: 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
-- workspace-root HEAD~2: 14ee7958f85a6301f4c86b7fb08452e5d4ba9542
+- workspace-root: latest local HEAD f246b072a430f24ab2641fffd8a5ffe469ddc7d6 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): f246b072a430f24ab2641fffd8a5ffe469ddc7d6, 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
+- workspace-root HEAD~1: f246b072a430f24ab2641fffd8a5ffe469ddc7d6
+- workspace-root HEAD~2: 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
 - workspace-root pre-sync command: git log -3 --format=%H
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无短 hash 歧义
 - RESULT: PASS
@@ -916,7 +916,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
+- workspace-root HEAD~1 anchor: f246b072a430f24ab2641fffd8a5ffe469ddc7d6
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -1136,7 +1136,7 @@
    - `RESULT: PASS`
 
 当前 latest tried entry 快照：
-- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，新增 latestAudit summary strict order 显式校验，要求 execution-state.json -> currentStep 与 VERIFICATION_RECORD.md 第 22/43/45/46 节同步落盘 latestAudit、summary、strict order、LATEST_AUDIT_SUMMARY_LABELS、### 22.、timestamp -> command -> result 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 latest audit summary order issues: 0、verification section sequence issues: 0、verification record consistency issues: 0，RESULT: PASS
+- latest tried entry exact snapshot: 本轮已补强 scripts/root_archive_audit.py，修正 verification_record_section_sequence_gaps() 的重复章节范围提示文案 22..44 -> 22..46，并同步回写 execution-state.json / VERIFICATION_RECORD.md / latestAudit 的 root pre-sync anchors、workspace-root recentCommits、latestAudit timestamp exact snapshot 与 summary order exact snapshot；复跑 python3 scripts/root_archive_audit.py 确认 recent commit consistency issues: 0、root head consistency issues: 0、workspace status consistency issues: 0、latest audit snapshot consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same latest tried entry baseline
 - blocking.tried: latest tried entry preserved as the newest blocking attempt record
 - RESULT: PASS
