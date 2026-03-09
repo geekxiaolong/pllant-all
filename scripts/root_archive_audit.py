@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# sync-note: keep this file dirty while root baseline docs are being synchronized
+# sync-note: keep this file dirty while root baseline docs are being synchronized (refreshed 2026-03-09 16:45 Asia/Shanghai)
 from __future__ import annotations
 
 import json
