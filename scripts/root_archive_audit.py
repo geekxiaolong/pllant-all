@@ -470,6 +470,7 @@ LATEST_AUDIT_SUMMARY_LABELS = (
     'fallback route consistency issues',
     'blocking point consistency issues',
     'next steps exact consistency issues',
+    'verification section sequence issues',
 )
 
 
@@ -653,6 +654,25 @@ NEXT_STEPS_EXACT_REQUIRED_MARKERS = {
     'currentStep': ('nextSteps', 'nextSteps[0]', 'nextSteps[1]', 'nextSteps[2]', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
     'VERIFICATION_RECORD.md': ('nextSteps', 'nextSteps[0]', 'nextSteps[1]', 'nextSteps[2]', 'execution-state.json', 'VERIFICATION_RECORD.md', 'currentStep', 'RESULT: PASS'),
 }
+
+VERIFICATION_RECORD_SECTION_SEQUENCE_HEADING = '### 43. VERIFICATION_RECORD 章节序号 / 唯一性显式校验'
+VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS = (
+    'VERIFICATION_RECORD.md',
+    'section headings',
+    'strict order',
+    'no duplicates',
+    '### 22.',
+    '### 23.',
+    '### 41.',
+    '### 42.',
+    '### 43.',
+    'RESULT: PASS',
+)
+VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS = {
+    'currentStep': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', 'RESULT: PASS'),
+    'VERIFICATION_RECORD.md': ('VERIFICATION_RECORD.md', 'section headings', 'strict order', 'no duplicates', '### 22.', '### 23.', '### 41.', '### 42.', '### 43.', 'RESULT: PASS'),
+}
+EXPECTED_VERIFICATION_SECTION_NUMBERS = list(range(22, 44))
 
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_HEADING = '### 36. blocking.tried 最新尝试显式校验'
 VERIFICATION_RECORD_LATEST_BLOCKING_TRIED_MARKERS = (
@@ -2034,6 +2054,59 @@ def blocking_status_consistency_gaps() -> list[str]:
     return gaps
 
 
+def verification_record_section_sequence_gaps() -> list[str]:
+    gaps: list[str] = []
+    state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
+    verification_text = VERIFICATION_RECORD.read_text(encoding='utf-8', errors='ignore')
+
+    heading_matches = list(re.finditer(r'^###\s+(\d+)\.', verification_text, re.MULTILINE))
+    numbered_section_values = [int(match.group(1)) for match in heading_matches if int(match.group(1)) >= 22]
+    expected = EXPECTED_VERIFICATION_SECTION_NUMBERS
+
+    duplicates = sorted({value for value in numbered_section_values if numbered_section_values.count(value) > 1})
+    missing = [value for value in expected if value not in numbered_section_values]
+
+    if numbered_section_values != expected:
+        gaps.append(
+            'VERIFICATION_RECORD section heading order mismatch :: '
+            f'actual={numbered_section_values} expected={expected}'
+        )
+    for value in duplicates:
+        gaps.append(f'VERIFICATION_RECORD duplicate section heading number :: {value}')
+    for value in missing:
+        gaps.append(f'VERIFICATION_RECORD missing section heading number :: {value}')
+
+    current_step = state.get('currentStep', '')
+    for marker in VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS['currentStep']:
+        if marker not in current_step:
+            gaps.append(f'execution-state currentStep missing verification section marker :: {marker}')
+
+    for marker in VERIFICATION_RECORD_SECTION_SEQUENCE_REQUIRED_MARKERS['VERIFICATION_RECORD.md']:
+        if marker not in verification_text:
+            gaps.append(f'VERIFICATION_RECORD missing verification section marker :: {marker}')
+
+    section_text = extract_heading_section(verification_text, VERIFICATION_RECORD_SECTION_SEQUENCE_HEADING)
+    if not section_text:
+        gaps.append(
+            'VERIFICATION_RECORD missing verification section sequence section :: '
+            f'{VERIFICATION_RECORD_SECTION_SEQUENCE_HEADING}'
+        )
+        return gaps
+
+    for marker in VERIFICATION_RECORD_SECTION_SEQUENCE_MARKERS:
+        if marker not in section_text:
+            gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {marker}')
+
+    exact_line = '- section heading sequence exact snapshot: ' + ', '.join(f'### {value}.' for value in expected)
+    if exact_line not in section_text:
+        gaps.append(f'VERIFICATION_RECORD section sequence marker missing :: {exact_line}')
+
+    if '- duplicate check: no duplicates across ### 22..43 numbered audit sections' not in section_text:
+        gaps.append('VERIFICATION_RECORD section sequence marker missing :: - duplicate check: no duplicates across ### 22..43 numbered audit sections')
+
+    return gaps
+
+
 def verification_record_consistency_gaps(expected_summary: dict[str, int]) -> list[str]:
     gaps: list[str] = []
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
@@ -2131,6 +2204,7 @@ def main() -> int:
     fallback_route_issues = fallback_route_consistency_gaps()
     blocking_point_issues = blocking_point_consistency_gaps()
     next_steps_exact_issues = next_steps_exact_consistency_gaps()
+    verification_section_sequence_issues = verification_record_section_sequence_gaps()
 
     state = json.loads(EXECUTION_STATE.read_text(encoding='utf-8'))
     updated_at = state.get('updatedAt', '')
@@ -2170,6 +2244,7 @@ def main() -> int:
         'fallback route consistency issues': len(fallback_route_issues),
         'blocking point consistency issues': len(blocking_point_issues),
         'next steps exact consistency issues': len(next_steps_exact_issues),
+        'verification section sequence issues': len(verification_section_sequence_issues),
     }
     verification_record_issues = state_sync_issues + verification_record_consistency_gaps(summary_counts)
     summary_counts['verification record consistency issues'] = len(verification_record_issues)
@@ -2260,6 +2335,9 @@ def main() -> int:
     if next_steps_exact_issues:
         print('\n[next steps exact consistency issues]')
         print('\n'.join(next_steps_exact_issues))
+    if verification_section_sequence_issues:
+        print('\n[verification section sequence issues]')
+        print('\n'.join(verification_section_sequence_issues))
 
     failed = bool(
         missing_readmes
@@ -2289,6 +2367,7 @@ def main() -> int:
         or fallback_route_issues
         or blocking_point_issues
         or next_steps_exact_issues
+        or verification_section_sequence_issues
     )
     if failed:
         print('\nRESULT: FAIL')
