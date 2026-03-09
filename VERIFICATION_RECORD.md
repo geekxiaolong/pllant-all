@@ -713,10 +713,10 @@
 - git -C heart-plant-admin remote get-url origin: git@github.com:geekxiaolong/heart-plant-admin.git
 - heart-plant-api: 0daddeeeb5243951f52591c9968720b88347be83
 - git -C heart-plant-api remote get-url origin: git@github.com:geekxiaolong/heart-plant-api.git
-- workspace-root: latest local HEAD f246b072a430f24ab2641fffd8a5ffe469ddc7d6 (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
-- workspace-root recent local heads (pre-sync latest 2): f246b072a430f24ab2641fffd8a5ffe469ddc7d6, 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
-- workspace-root HEAD~1: f246b072a430f24ab2641fffd8a5ffe469ddc7d6
-- workspace-root HEAD~2: 0b8f7ba1045ac806f290a7aaa5ebe807a67da69f
+- workspace-root: latest local HEAD 2e64762b67697adcf6fe3b3b56d035495dfaaf0e (pre-sync anchor = HEAD~1, see VERIFICATION_RECORD.md recentCommits/root-head sections)
+- workspace-root recent local heads (pre-sync latest 2): 2e64762b67697adcf6fe3b3b56d035495dfaaf0e, f246b072a430f24ab2641fffd8a5ffe469ddc7d6
+- workspace-root HEAD~1: 2e64762b67697adcf6fe3b3b56d035495dfaaf0e
+- workspace-root HEAD~2: f246b072a430f24ab2641fffd8a5ffe469ddc7d6
 - workspace-root pre-sync command: git log -3 --format=%H
 - full-length policy: heart-plant / heart-plant-admin / heart-plant-api recentCommits 均使用 full-length 40位精确哈希，无短 hash 歧义
 - RESULT: PASS
@@ -798,7 +798,7 @@
    - `RESULT: PASS`
 
 当前 blocking.point 快照：
-- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=0b8f7ba1045ac806f290a7aaa5ebe807a67da69f、HEAD~2=14ee7958f85a6301f4c86b7fb08452e5d4ba9542；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=2e64762b67697adcf6fe3b3b56d035495dfaaf0e、HEAD~2=f246b072a430f24ab2641fffd8a5ffe469ddc7d6；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
 - 真实 Supabase 写库/存储联调仍缺 `SUPABASE_SERVICE_ROLE_KEY`
 - 登录后截图回归仍缺测试账号或有效 Supabase 登录态
 - 根工作区仓库仍未配置可用 `origin`
@@ -916,7 +916,7 @@
 当前根仓库 current HEAD 校验语义：
 - git rev-parse HEAD: required as an explicit command marker
 - workspace-root current HEAD note: current HEAD changes after every sync commit; machine anchor remains HEAD~1 plus git rev-parse HEAD command visibility
-- workspace-root HEAD~1 anchor: f246b072a430f24ab2641fffd8a5ffe469ddc7d6
+- workspace-root HEAD~1 anchor: 2e64762b67697adcf6fe3b3b56d035495dfaaf0e
 - currentStep: synchronized with the same markers
 - RESULT: PASS
 
@@ -1208,7 +1208,7 @@
 5. 复跑 `python3 scripts/root_archive_audit.py`，确认 `blocking point consistency issues: 0`、`verification record consistency issues: 0`、`doc timestamp issues: 0`、`RESULT: PASS`
 
 当前 blocking.point 快照：
-- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=0b8f7ba1045ac806f290a7aaa5ebe807a67da69f、HEAD~2=14ee7958f85a6301f4c86b7fb08452e5d4ba9542；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
+- blocking.point exact snapshot: 真实 Supabase 写库/存储联调仍缺少 SUPABASE_SERVICE_ROLE_KEY，mock 初始化写入 kv_store_4b732228 仍会命中 RLS；登录后核心页面截图回归仍缺真实测试账号/有效 Supabase 登录态；此外根工作区仓库未配置 origin，当前根目录提交无法 push；根仓库 pre-sync 锚点仍为 HEAD~1=2e64762b67697adcf6fe3b3b56d035495dfaaf0e、HEAD~2=f246b072a430f24ab2641fffd8a5ffe469ddc7d6；并计划于本轮提交后复跑 python3 scripts/root_archive_audit.py 确认 doc timestamp issues: 0、recent commit consistency issues: 0、root head consistency issues: 0、root remote consistency issues: 0、blocking snapshot consistency issues: 0、workspace status consistency issues: 0、blocking status consistency issues: 0、latest blocking tried consistency issues: 0、blocking recent trail consistency issues: 0、latest audit snapshot consistency issues: 0、verification record consistency issues: 0、execution plan consistency issues: 0、completed sequence consistency issues: 0、fallback route consistency issues: 0、blocking point consistency issues: 0、next steps exact consistency issues: 0、verification section sequence issues: 0、latest audit summary order issues: 0，RESULT: PASS
 - execution-state.json / VERIFICATION_RECORD.md / currentStep: synchronized with the same blocking.point baseline
 - RESULT: PASS
 
