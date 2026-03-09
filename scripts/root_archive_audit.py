@@ -611,16 +611,16 @@ VERIFICATION_RECORD_WORKSPACE_STATUS_MARKERS = (
 
 SUBREPO_WORKSPACE_STATUS_EXPECTED = {
     'heart-plant': (
-        'M src/app/pages/UserLogin.tsx',
-        'M src/app/utils/api.ts',
-        'M utils/supabase/info.tsx',
+        ' M src/app/pages/UserLogin.tsx',
+        ' M src/app/utils/api.ts',
+        ' M utils/supabase/info.tsx',
     ),
     'heart-plant-admin': (
-        'M src/app/utils/api.ts',
-        'M utils/supabase/info.tsx',
+        ' M src/app/utils/api.ts',
+        ' M utils/supabase/info.tsx',
     ),
     'heart-plant-api': (
-        'M deno.json',
+        ' M deno.json',
     ),
 }
 SUBREPO_WORKSPACE_STATUS_REQUIRED_MARKERS = {
