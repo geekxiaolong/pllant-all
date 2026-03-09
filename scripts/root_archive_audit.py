@@ -1443,6 +1443,19 @@ def latest_audit_summary_order_gaps() -> list[str]:
                 gaps.append(f'VERIFICATION_RECORD latest audit summary order mismatch :: {line}')
             last_index = idx
 
+    latest_audit = state.get('latestAudit', {})
+    state_summary = latest_audit.get('summary') if isinstance(latest_audit, dict) else None
+    if not isinstance(state_summary, dict):
+        gaps.append('execution-state latestAudit.summary missing or invalid for strict order check')
+    else:
+        actual_order = list(state_summary.keys())
+        expected_order = list(LATEST_AUDIT_SUMMARY_LABELS)
+        if actual_order != expected_order:
+            gaps.append(
+                'execution-state latestAudit.summary key order mismatch :: '
+                f'actual={actual_order} expected={expected_order}'
+            )
+
     section_46 = extract_heading_section(verification_text, VERIFICATION_RECORD_LATEST_AUDIT_SUMMARY_ORDER_HEADING)
     if not section_46:
         gaps.append(
