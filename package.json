@@ -4,8 +4,10 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "echo '[Archived root workspace] Please run dev inside heart-plant/ or heart-plant-admin/, not the root monolith workspace.' && exit 1",
-    "build": "echo '[Archived root workspace] Please build inside heart-plant/ or heart-plant-admin/, not the root monolith workspace.' && exit 1",
+    "dev": "cd heart-plant && npm run dev",
+    "dev:admin": "cd heart-plant-admin && npm run dev",
+    "build": "cd heart-plant && npm run build",
+    "build:admin": "cd heart-plant-admin && npm run build",
     "deploy": "bash deploy.sh",
     "deploy:supabase": "bash deploy-supabase.sh",
     "deploy:all": "bash deploy.sh && bash deploy-supabase.sh",

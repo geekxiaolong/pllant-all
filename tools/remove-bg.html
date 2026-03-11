@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>白底去背 · 批处理</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    p { color: #999; font-size: 0.9rem; margin-bottom: 1rem; }
+    .zone {
+      border: 2px dashed #444;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .zone:hover, .zone.dragover { border-color: #6b8; background: #252525; }
+    .zone input { display: none; }
+    .zone .hint { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+    .threshold {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .threshold label { flex: 0 0 140px; font-size: 0.9rem; }
+    .threshold input[type="range"] { flex: 1; }
+    .threshold span { min-width: 3ch; font-variant-numeric: tabular-nums; }
+    .batch-actions { margin-bottom: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .batch-actions .count { color: #888; font-size: 0.9rem; }
+    .list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #252525;
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card .name {
+      font-size: 0.75rem;
+      color: #aaa;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card .preview-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .card .preview-row img,
+    .card .preview-row canvas {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      border-radius: 6px;
+      background: repeating-conic-gradient(#333 0% 25%, #2a2a2a 0% 50%) 50% / 10px 10px;
+    }
+    .card .preview-row img { background: #222; }
+    .card .preview-row .label { font-size: 0.65rem; color: #666; grid-column: 1 / -1; }
+    .card .btn {
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #3a7;
+      color: #fff;
+      width: 100%;
+    }
+    .card .btn:hover { filter: brightness(1.1); }
+    .btn {
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #3a7;
+      color: #fff;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.secondary { background: #444; }
+    .preview-section { margin-top: 1rem; }
+    .preview-section h2 { font-size: 1rem; margin-bottom: 0.75rem; color: #bbb; }
+  </style>
+</head>
+<body>
+  <h1>白底去背 → 透明 PNG（批处理）</h1>
+  <p>支持多选或拖拽多张白底图片，统一去背并批量下载。</p>
+
+  <div class="zone" id="dropZone" role="button" tabindex="0">
+    <input type="file" id="fileInput" accept="image/*" multiple />
+    <span>点击或拖拽多张图片到此处</span>
+    <div class="hint">可多选文件，或一次拖入多张图</div>
+  </div>
+
+  <div class="threshold" id="thresholdRow" style="display: none;">
+    <label for="threshold">白色阈值 (0–255)</label>
+    <input type="range" id="threshold" min="200" max="255" value="250" />
+    <span id="thresholdValue">250</span>
+  </div>
+
+  <div class="preview-section" id="previewSection" style="display: none;">
+    <div class="batch-actions">
+      <button type="button" class="btn" id="downloadAllBtn">下载全部透明 PNG</button>
+      <button type="button" class="btn secondary" id="resetBtn">清空重新选</button>
+      <span class="count" id="countText"></span>
+    </div>
+    <h2 id="listTitle">处理结果</h2>
+    <div class="list" id="list"></div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const thresholdRow = document.getElementById("thresholdRow");
+    const thresholdInput = document.getElementById("threshold");
+    const thresholdValue = document.getElementById("thresholdValue");
+    const previewSection = document.getElementById("previewSection");
+    const list = document.getElementById("list");
+    const countText = document.getElementById("countText");
+    const downloadAllBtn = document.getElementById("downloadAllBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    /** @type {{ file: File; originalUrl: string; imgEl: HTMLImageElement; canvasEl: HTMLCanvasElement; resultBlob: Blob | null }[]} */
+    let items = [];
+
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const files = Array.from(e.dataTransfer?.files ?? []).filter((f) => f.type.startsWith("image/"));
+      if (files.length) handleFiles(files);
+    });
+    fileInput.addEventListener("change", () => {
+      const files = Array.from(fileInput.files ?? []);
+      if (files.length) handleFiles(files);
+    });
+
+    thresholdInput.addEventListener("input", () => {
+      thresholdValue.textContent = thresholdInput.value;
+      const th = parseInt(thresholdInput.value, 10);
+      items.forEach((item) => applyOne(item, th));
+    });
+
+    function handleFiles(files) {
+      reset();
+      const th = parseInt(thresholdInput.value, 10);
+      thresholdRow.style.display = "flex";
+      previewSection.style.display = "block";
+      thresholdValue.textContent = thresholdInput.value;
+
+      files.forEach((file) => {
+        const originalUrl = URL.createObjectURL(file);
+        const card = document.createElement("div");
+        card.className = "card";
+        const name = document.createElement("div");
+        name.className = "name";
+        name.title = file.name;
+        name.textContent = file.name;
+        const previewRow = document.createElement("div");
+        previewRow.className = "preview-row";
+        const imgEl = document.createElement("img");
+        imgEl.alt = file.name;
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = "原图 | 去背";
+        const canvasEl = document.createElement("canvas");
+        const downloadBtn = document.createElement("button");
+        downloadBtn.className = "btn";
+        downloadBtn.type = "button";
+        downloadBtn.textContent = "下载此张";
+        previewRow.appendChild(imgEl);
+        previewRow.appendChild(canvasEl);
+        previewRow.appendChild(label);
+        card.appendChild(name);
+        card.appendChild(previewRow);
+        card.appendChild(downloadBtn);
+        list.appendChild(card);
+
+        const item = {
+          file,
+          originalUrl,
+          imgEl,
+          canvasEl,
+          resultBlob: null,
+          downloadBtn,
+        };
+        items.push(item);
+
+        imgEl.onload = () => {
+          applyOne(item, th);
+          downloadBtn.onclick = () => downloadOne(item);
+        };
+        imgEl.onerror = () => {
+          name.textContent = file.name + " (加载失败)";
+          name.style.color = "#c44";
+        };
+        imgEl.src = originalUrl;
+      });
+
+      countText.textContent = `共 ${items.length} 张`;
+    }
+
+    function applyOne(item, th) {
+      const { imgEl, canvasEl, file } = item;
+      if (!imgEl.complete || !imgEl.naturalWidth) return;
+      const w = imgEl.naturalWidth;
+      const h = imgEl.naturalHeight;
+      canvasEl.width = w;
+      canvasEl.height = h;
+      const ctx = canvasEl.getContext("2d");
+      ctx.drawImage(imgEl, 0, 0);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const gray = (r + g + b) / 3;
+        if (gray >= th && r >= th - 10 && g >= th - 10 && b >= th - 10) {
+          data[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      canvasEl.toBlob(
+        (blob) => {
+          item.resultBlob = blob;
+        },
+        "image/png"
+      );
+    }
+
+    function downloadOne(item) {
+      if (!item.resultBlob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(item.resultBlob);
+      a.download = item.file.name.replace(/\.[^.]+$/i, "") + "-transparent.png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function downloadAll() {
+      let i = 0;
+      function next() {
+        if (i >= items.length) return;
+        const item = items[i];
+        i++;
+        if (item.resultBlob) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(item.resultBlob);
+          a.download = item.file.name.replace(/\.[^.]+$/i, "") + "-transparent.png";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+        setTimeout(next, 350);
+      }
+      next();
+    }
+
+    function reset() {
+      items.forEach((it) => URL.revokeObjectURL(it.originalUrl));
+      items = [];
+      list.innerHTML = "";
+      fileInput.value = "";
+      thresholdRow.style.display = "none";
+      previewSection.style.display = "none";
+    }
+
+    downloadAllBtn.addEventListener("click", downloadAll);
+    resetBtn.addEventListener("click", reset);
+  </script>
+</body>
+</html>

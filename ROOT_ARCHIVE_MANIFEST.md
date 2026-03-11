@@ -1,6 +1,8 @@
 # 根工作区残余清单（历史归档总览）
 
-更新时间：2026-03-09 16:58 (Asia/Shanghai)
+更新时间：2026-03-10
+
+**近期清理**：已移除根目录无用归档占位代码，包括 `src/`、`utils/`（仅含 throw 的占位模块）以及未使用的 `vite.config.ts`、`postcss.config.mjs`。实际开发与构建均在 `heart-plant/`、`heart-plant-admin/`、`heart-plant-api/` 中进行。
 
 ## 归档说明（2026-03-09）
 
@@ -79,16 +81,12 @@
 - `docker-compose.yml`
 - `index.html`
 - `package.json`
-- `postcss.config.mjs`
-- `vite.config.ts`
 
 ### 2.3 历史目录（目录内已有 README 归档说明）
-- `src/`
 - `supabase/`
 - `stream-server/`
 - `nginx/`
 - `guidelines/`
-- `utils/`
 - `workflows/`
 - `LICENSE/`
 - `.vscode/`
