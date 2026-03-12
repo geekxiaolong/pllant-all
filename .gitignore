@@ -1,13 +1,14 @@
 # Archived root workspace ignore rules
-# The active applications live in their own repositories.
+# The active applications live in submodules (heart-plant, heart-plant-admin, heart-plant-api).
 
 .vscode/*
 !.vscode/README.md
 node_modules/
 
-heart-plant/
-heart-plant-admin/
-heart-plant-api/
+# 本地备份（添加 submodule 前的拷贝，确认无误后可删除）
+heart-plant.bak/
+heart-plant-admin.bak/
+heart-plant-api.bak/
 
 .DS_Store
 *.log

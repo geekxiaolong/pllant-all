@@ -1,6 +1,12 @@
+同一品种可认领多棵，正在重试…
+
 # CURRENT_STATE.md
 
-更新时间：2026-03-10 14:03 (Asia/Shanghai)
+更新时间：2026-03-11 (Asia/Shanghai)
+
+## 验证状态
+
+- **P0 Admin Smoke**：已更新（管理侧冒烟验证）
 
 ## 当前阶段
 

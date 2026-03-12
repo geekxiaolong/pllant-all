@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cd heart-plant && npm run dev",
     "dev:admin": "cd heart-plant-admin && npm run dev",
+    "dev:all": "bash start-all.sh",
     "build": "cd heart-plant && npm run build",
     "build:admin": "cd heart-plant-admin && npm run build",
     "deploy": "bash deploy.sh",
