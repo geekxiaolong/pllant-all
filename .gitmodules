@@ -1,0 +1,9 @@
+[submodule "heart-plant"]
+	path = heart-plant
+	url = git@github.com:geekxiaolong/heart-plant.git
+[submodule "heart-plant-admin"]
+	path = heart-plant-admin
+	url = git@github.com:geekxiaolong/heart-plant-admin.git
+[submodule "heart-plant-api"]
+	path = heart-plant-api
+	url = git@github.com:geekxiaolong/heart-plant-api.git
